@@ -1,0 +1,48 @@
+# Пример конфигурации NGINX для сервера обновлений OTA АСУ ТП «АЛЕКС»
+# Замените OTA_HOST на реальный домен вашего сервера (например: ota.alex-plant.ru)
+
+server {
+    listen 80;
+    server_name OTA_HOST;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name OTA_HOST;
+
+    # SSL сертификаты (Let's Encrypt или собственный корпоративный CA)
+    ssl_certificate     /etc/letsencrypt/live/OTA_HOST/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/OTA_HOST/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    root /var/www/alex-ota;
+
+    location = /update-manifest.json {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Accept, Cache-Control, Authorization, X-Alex-Plant-Client, X-Alex-SSL-Mode, X-Alex-SSL-Fingerprint, X-Alex-Client-Version" always;
+        add_header Access-Control-Max-Age 86400 always;
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+
+        try_files /update-manifest.json =404;
+    }
+
+    location /patches/ {
+        default_type application/json;
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Accept, Authorization" always;
+        add_header Cache-Control "public, max-age=3600" always;
+
+        if ($request_method = OPTIONS) {
+            return 204;
+        }
+    }
+}

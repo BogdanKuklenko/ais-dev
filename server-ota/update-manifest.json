@@ -1,0 +1,96 @@
+{
+  "format": "alex_ota_manifest_v1",
+  "latestVersion": "2.6.0",
+  "minSupportedVersion": "2.0.0",
+  "releaseDate": "2026-08-31",
+  "serverProtocol": "HTTPS/TLS",
+  "sslVerified": true,
+  "title": "Официальный релиз v2.6.0: Новые рецептуры ГОСТ 31357 и оптимизация дозирования",
+  "description": "Тестовый релиз АСУ ТП «АЛЕКС» для проверки сетевого и файлового обновления. Включает усиленный клей П-25 Люкс Гранит, зимнюю фасадную штукатурку С-45 и обновленные калибровочные допуски.",
+  "changelog": [
+    "Добавлена новая технологическая карта: Клей повышенной фиксации П-25 Люкс Гранит (М-500)",
+    "Добавлена зимняя фасадная штукатурка С-45 Теплофасад с противоморозным комплексом",
+    "Скорректированы весовые допуски микрокомпонентов и цемента по ГОСТ 31357-2007 (±1.0%)",
+    "Оптимизирована точность отсечки шнековых питателей и логика проверки целостности SHA-256"
+  ],
+  "mandatory": false,
+  "downloadUrl": "https://OTA_HOST/update-manifest.json",
+  "checksum": "SHA256-E889BC10F20",
+  "patchPackage": {
+    "format": "alex_patch_v1",
+    "patchId": "patch_release_v260_official",
+    "version": "2.6.0",
+    "title": "Заводской пакет обновления v2.6.0 (ООО «АЛЕКС»)",
+    "description": "Официальный технологический пакет: новые формулы смесей, ГОСТ-допуски и параметры отсечки весов.",
+    "releaseDate": "2026-08-31",
+    "author": "Главный технолог ООО «АЛЕКС» Васильев С.М.",
+    "patchType": "full_update",
+    "targetMinVersion": "2.0.0",
+    "changelog": [
+      "Внедрена рецептура П-25 Люкс Гранит (ГОСТ 31357)",
+      "Внедрена рецептура С-45 Теплофасад Зима (до -15°C)",
+      "Обновлены параметры допусков дозирования: цемент ±1.0%, песок ±1.5%"
+    ],
+    "payload": {
+      "systemVersion": "2.6.0",
+      "settingsUpdate": {
+        "soundEnabled": true,
+        "autoAdvanceOnEnter": true,
+        "factoryName": "ООО «АЛЕКС»",
+        "plantSection": "Участок автоматизированного весового дозирования",
+        "toleranceLimitPercent": 1.5
+      },
+      "recipesToAddOrUpdate": [
+        {
+          "id": "rec-p25-lux-granit",
+          "code": "П-25 Люкс",
+          "name": "Клей усиленный для тяжелого керамогранита и камня (ГОСТ 31357)",
+          "category": "Клей",
+          "description": "Высокоадгезивный цементный клей класса C2TE для крупноформатного керамогранита и фасадов.",
+          "targetTotalWeightKg": 1000,
+          "updatedAt": "2026-08-31T09:00:00Z",
+          "components": [
+            { "id": "cp25-1", "name": "Портландцемент ЦЕМ I 52.5Н", "fraction": "М-500 Д0", "targetWeightKg": 320, "unit": "кг", "tolerancePercent": 1.0, "color": "#475569" },
+            { "id": "cp25-2", "name": "Песок кварцевый очищенный", "fraction": "0.1-0.63 мм", "targetWeightKg": 590, "unit": "кг", "tolerancePercent": 1.5, "color": "#D97706" },
+            { "id": "cp25-3", "name": "Микрокальцит фракционированный", "fraction": "0-0.1 мм", "targetWeightKg": 80, "unit": "кг", "tolerancePercent": 2.0, "color": "#A8A29E" },
+            { "id": "cp25-4", "name": "Эфир целлюлозы высокой вязкости", "fraction": "порошок", "targetWeightKg": 4.5, "unit": "кг", "tolerancePercent": 1.0, "color": "#065F46" },
+            { "id": "cp25-5", "name": "Редиспергируемый полимер VAE", "fraction": "полимер", "targetWeightKg": 5.5, "unit": "кг", "tolerancePercent": 1.0, "color": "#7C3AED" }
+          ]
+        },
+        {
+          "id": "rec-s45-winter-fasad",
+          "code": "С-45 Зима",
+          "name": "Штукатурка фасадная морозостойкая Теплофасад (до -15°C)",
+          "category": "Штукатурка",
+          "description": "Защитно-отделочная цементная штукатурка с противоморозным модификатором для зимнего бетонирования.",
+          "targetTotalWeightKg": 1000,
+          "updatedAt": "2026-08-31T09:00:00Z",
+          "components": [
+            { "id": "cs45-1", "name": "Портландцемент ЦЕМ I 42.5", "fraction": "М-500", "targetWeightKg": 260, "unit": "кг", "tolerancePercent": 1.0, "color": "#64748B" },
+            { "id": "cs45-2", "name": "Песок кварцевый крупный", "fraction": "0.63-1.25 мм", "targetWeightKg": 400, "unit": "кг", "tolerancePercent": 1.5, "color": "#D97706" },
+            { "id": "cs45-3", "name": "Песок кварцевый мелкий", "fraction": "0.1-0.63 мм", "targetWeightKg": 250, "unit": "кг", "tolerancePercent": 1.5, "color": "#F59E0B" },
+            { "id": "cs45-4", "name": "Известь гидратная пушонка", "fraction": "порошок", "targetWeightKg": 70, "unit": "кг", "tolerancePercent": 2.0, "color": "#CBD5E1" },
+            { "id": "cs45-5", "name": "Противоморозный комплекс нитрита натрия", "fraction": "модификатор", "targetWeightKg": 15.0, "unit": "кг", "tolerancePercent": 1.0, "color": "#0284C7" },
+            { "id": "cs45-6", "name": "Водоудерживающая добавка", "fraction": "порошок", "targetWeightKg": 5.0, "unit": "кг", "tolerancePercent": 1.0, "color": "#059669" }
+          ]
+        },
+        {
+          "id": "rec-p20-pro",
+          "code": "П-20 Про",
+          "name": "Клей плиточный базовый стандартный (ГОСТ 31357)",
+          "category": "Клей",
+          "description": "Базовый цементный клеевой состав для керамической плитки и керамогранита малого формата.",
+          "targetTotalWeightKg": 1000,
+          "updatedAt": "2026-08-31T09:00:00Z",
+          "components": [
+            { "id": "cp-1", "name": "Цемент ПЦ 500-Д0", "fraction": "М-500", "targetWeightKg": 285, "unit": "кг", "tolerancePercent": 1.0, "color": "#64748B" },
+            { "id": "cp-2", "name": "Песок кварцевый сухой", "fraction": "0.1-0.63 мм", "targetWeightKg": 625, "unit": "кг", "tolerancePercent": 1.5, "color": "#D97706" },
+            { "id": "cp-3", "name": "Мука известняковая", "fraction": "0-0.1 мм", "targetWeightKg": 85, "unit": "кг", "tolerancePercent": 2.0, "color": "#A8A29E" },
+            { "id": "cp-4", "name": "Эфир целлюлозы (MHEC)", "fraction": "порошок", "targetWeightKg": 3.0, "unit": "кг", "tolerancePercent": 1.0, "color": "#065F46" },
+            { "id": "cp-5", "name": "РПП полимерный порошок", "fraction": "VAE", "targetWeightKg": 2.0, "unit": "кг", "tolerancePercent": 1.0, "color": "#7C3AED" }
+          ]
+        }
+      ]
+    }
+  }
+}
