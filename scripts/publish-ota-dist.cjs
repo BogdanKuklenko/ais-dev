@@ -15,11 +15,11 @@ const inActions = process.env.GITHUB_ACTIONS === 'true';
 const forced = process.env.ALEX_PUBLISH_OTA === '1';
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 
-if (!forced && !token && !inActions) {
+if (!forced && !inActions) {
   process.exit(0);
 }
 
-if (!token) {
+if (!token && !forced) {
   console.warn('[ota-dist] skip: no GITHUB_TOKEN/GH_TOKEN in this step');
   process.exit(0);
 }
@@ -93,11 +93,23 @@ try {
     work
   );
   run(git, ['remote', 'add', 'origin', `https://github.com/${repo}.git`], work);
-  run(
-    git,
-    ['-c', `http.extraHeader=AUTHORIZATION: bearer ${token}`, 'push', '--force', 'origin', 'HEAD:ota-dist'],
-    work
-  );
+  if (inActions && token) {
+    run(
+      git,
+      ['-c', `http.extraHeader=AUTHORIZATION: bearer ${token}`, 'push', '--force', 'origin', 'HEAD:ota-dist'],
+      work
+    );
+  } else {
+    const gh = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'GitHub CLI', 'gh.exe');
+    const helper = fs.existsSync(gh)
+      ? `!${gh.replace(/\\/g, '/')} auth git-credential`
+      : '!gh auth git-credential';
+    run(
+      git,
+      ['-c', 'credential.helper=', '-c', `credential.helper=${helper}`, 'push', '--force', 'origin', 'HEAD:ota-dist'],
+      work
+    );
+  }
   console.log('[ota-dist] published branch ota-dist for', sha);
 } catch (e) {
   console.error('[ota-dist] publish failed:', e instanceof Error ? e.message : e);
