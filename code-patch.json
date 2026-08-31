@@ -1,0 +1,65 @@
+{
+  "format": "alex_code_patch_v1",
+  "gitSha": "9f4b11aa9f25815bca694c2f780ac95faaf12de9",
+  "version": "2.4.0",
+  "builtAt": "2026-08-31T16:11:15.335Z",
+  "fileCount": 11,
+  "totalBytes": 1647431,
+  "files": [
+    {
+      "path": "assets/index-BIvKX75v.css",
+      "sha256": "b2809a36120c5ccd4b0ff25803fd0987335335d4f94b3e7e5ef5a04855806b19",
+      "size": 62680
+    },
+    {
+      "path": "assets/index-BYg0oRKZ.js",
+      "sha256": "e2b14e7ca341f793ec84b23a9aafd140b95b1c6dc867035032dfe014a7c15745",
+      "size": 286462
+    },
+    {
+      "path": "assets/vendor-pdf-QESf_c22.js",
+      "sha256": "861c45129d83658c422afe86572a7cbfb98a879fc9af6d7cbbd7886e793d926e",
+      "size": 575967
+    },
+    {
+      "path": "assets/vendor-react-BLms6IR2.js",
+      "sha256": "431b7237cb0b23c319673a9659fa0221ce76ecac01e7652af73960bc8f8d25e9",
+      "size": 193944
+    },
+    {
+      "path": "assets/vendor-U_uD-nnj.js",
+      "sha256": "818cbec04dc562d26c9044a689f04568f58c899ece2e0e6065fdbe57af7ced06",
+      "size": 208200
+    },
+    {
+      "path": "assets/vendor-ui-B4iK_b3H.js",
+      "sha256": "49d1a04a84f15ee2a132be34f816e29126d027f9793c9950ede3e3a7d21aa8a7",
+      "size": 24118
+    },
+    {
+      "path": "assets/vendor-xlsx-3SA47z_C.js",
+      "sha256": "ed30df425e6658e122eb8fdcb8faa9dd7b83f1cc7cde5059466f197d4854197e",
+      "size": 283104
+    },
+    {
+      "path": "icon.svg",
+      "sha256": "8d6a0e307178f966e2d2a1500f06fd618f2225e2d8c41c32adaede6b54e7ad4e",
+      "size": 790
+    },
+    {
+      "path": "index.html",
+      "sha256": "e625448ff8b548b2d690b52c2e820389d66679c89650e442c32335e730b90082",
+      "size": 1769
+    },
+    {
+      "path": "manifest.json",
+      "sha256": "4b1b1a24aa680393ab208c030b8e9e7fd88a3aff6d2bb80d4ea54ac18db5d4d1",
+      "size": 590
+    },
+    {
+      "path": "update-manifest.json",
+      "sha256": "20c0ee3e14abff34f51c6aa9a2565f6db9c6d5de965eb3c79cebeda49f90616e",
+      "size": 9807
+    }
+  ]
+}
