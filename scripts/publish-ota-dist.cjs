@@ -100,13 +100,18 @@ try {
       work
     );
   } else {
-    const gh = path.join(process.env.ProgramFiles || 'C:\\Program Files', 'GitHub CLI', 'gh.exe');
-    const helper = fs.existsSync(gh)
-      ? `!${gh.replace(/\\/g, '/')} auth git-credential`
-      : '!gh auth git-credential';
     run(
       git,
-      ['-c', 'credential.helper=', '-c', `credential.helper=${helper}`, 'push', '--force', 'origin', 'HEAD:ota-dist'],
+      [
+        '-c',
+        'credential.helper=',
+        '-c',
+        'credential.helper=!C:/Program\\ Files/GitHub\\ CLI/gh.exe auth git-credential',
+        'push',
+        '--force',
+        'origin',
+        'HEAD:ota-dist',
+      ],
       work
     );
   }
