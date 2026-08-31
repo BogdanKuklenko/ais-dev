@@ -27,6 +27,10 @@ Actions тогда обновит Release tag `latest-win`.
 - Пуш в main. Правка только public/update-manifest.json Actions НЕ запускает (рецептуры).
 - Не удаляй workflow `.github/workflows/windows-code-ota.yml`.
 - Не меняй ветку ota-dist вручную и не указывай Cloud Run / alex-mixes.ru.
+- Токен `gh` без scope `workflow` не может обновить YAML в `.github/workflows/`.
+  Шаблон: `server-ota/github-windows-code-ota.yml`. После `gh auth refresh -s workflow`
+  скопируй его в `.github/workflows/windows-code-ota.yml` и запушь — иначе каждый
+  push в src по-прежнему собирает полный exe. Патч-файлы живут на ветке `ota-dist`.
 
 Первый раз на машине
 Нужен exe, который умеет overlay (userData/app-overlay). Старый пульт без этого кода
