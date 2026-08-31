@@ -45,6 +45,7 @@ import { RecipeManagerModal } from './components/RecipeManagerModal';
 import { TechSupportModal } from './components/TechSupportModal';
 import { PrintReportView } from './components/PrintReportView';
 import { UpdateManagerModal } from './components/UpdateManagerModal';
+import { VersionHistoryModal } from './components/VersionHistoryModal';
 import { 
   FlaskConical, 
   Sparkles, 
@@ -112,6 +113,7 @@ export default function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState<boolean>(false);
   const [isSupportOpen, setIsSupportOpen] = useState<boolean>(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState<boolean>(false);
+  const [isVersionHistoryOpen, setIsVersionHistoryOpen] = useState<boolean>(false);
   const [summaryModalShift, setSummaryModalShift] = useState<ShiftSummary | null>(null);
   const [printModalShift, setPrintModalShift] = useState<ShiftSummary | null>(null);
 
@@ -487,6 +489,7 @@ export default function App() {
         onOpenRecipeSelect={() => setIsRecipeSelectorOpen(true)}
         onOpenSupport={() => setIsSupportOpen(true)}
         onOpenUpdates={() => setIsUpdateModalOpen(true)}
+        onOpenVersionHistory={() => setIsVersionHistoryOpen(true)}
         onToggleSound={() => handleUpdateSettings({ ...settings, soundEnabled: !settings.soundEnabled })}
         onToggleTheme={handleToggleTheme}
         isDarkMode={isDarkMode}
@@ -896,6 +899,7 @@ export default function App() {
           onUpdateSettings={handleUpdateSettings}
           onClose={() => setIsSupportOpen(false)}
           onOpenUpdates={() => setIsUpdateModalOpen(true)}
+          onOpenVersionHistory={() => setIsVersionHistoryOpen(true)}
           onTriggerForcedUpdateTest={() => handleExecuteForcedServerUpdate()}
         />
       )}
@@ -919,6 +923,21 @@ export default function App() {
           currentRecipeId={currentRecipe.id}
           onUpdateState={handleUpdateSystemState}
           onTriggerForcedUpdateTest={() => handleExecuteForcedServerUpdate()}
+        />
+      )}
+
+      {/* 8. Version History & Audit Modal */}
+      {isVersionHistoryOpen && (
+        <VersionHistoryModal
+          isOpen={isVersionHistoryOpen}
+          onClose={() => setIsVersionHistoryOpen(false)}
+          recipes={recipes}
+          settings={settings}
+          onUpdateState={handleUpdateSystemState}
+          onOpenUpdates={() => {
+            setIsVersionHistoryOpen(false);
+            setIsUpdateModalOpen(true);
+          }}
         />
       )}
     </div>

@@ -7,7 +7,8 @@ import {
   PatchHistoryRecord,
   BackupSnapshot,
   ServerApiSslConfig,
-  SessionStateSnapshot
+  SessionStateSnapshot,
+  VersionLogEntry
 } from '../types';
 import { DEFAULT_RECIPES } from '../data/defaultRecipes';
 
@@ -23,6 +24,7 @@ const STORAGE_KEYS = {
   BACKUP_SNAPSHOTS: 'alex_production_backup_snapshots_v1',
   UPDATE_SERVER_URL: 'alex_production_update_server_url_v1',
   SESSION_PRESERVATION: 'alex_production_session_preservation_v1',
+  VERSION_LOG: 'alex_production_version_log_v1',
 };
 
 export const DEFAULT_SSL_CONFIG: ServerApiSslConfig = {
@@ -322,6 +324,23 @@ export function savePatchHistory(history: PatchHistoryRecord[]): void {
     localStorage.setItem(STORAGE_KEYS.PATCH_HISTORY, JSON.stringify(history));
   } catch (e) {
     console.error('Failed to save patch history', e);
+  }
+}
+
+export function getStoredVersionLog(): VersionLogEntry[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.VERSION_LOG);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveStoredVersionLog(log: VersionLogEntry[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.VERSION_LOG, JSON.stringify(log));
+  } catch (e) {
+    console.error('Failed to save version log', e);
   }
 }
 

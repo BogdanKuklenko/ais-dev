@@ -16,6 +16,7 @@ import {
   saveBackupSnapshots, 
   saveStoredCurrentRecipeId 
 } from './storage';
+import { recordVersionEvent } from './versionTracker';
 
 export const CURRENT_APP_VERSION = '2.4.0';
 
@@ -298,6 +299,24 @@ export function applyAlexPatch(
     const currentHistory = getPatchHistory();
     savePatchHistory([historyRecord, ...currentHistory]);
 
+    // 6. Record in Master Version Ledger
+    recordVersionEvent({
+      id: `ver_log_${patch.patchId}_${Date.now()}`,
+      version: patch.version || CURRENT_APP_VERSION,
+      type: patch.patchType === 'recipes_update' ? 'patch' : 'release',
+      title: patch.title,
+      description: patch.description,
+      author: patch.author,
+      changelog: patch.changelog && patch.changelog.length > 0 ? patch.changelog : ['Успешная установка технологического пакета'],
+      affectedRecipes: patch.payload.recipesToAddOrUpdate?.map((r) => r.code) || [],
+      checksum: patch.checksum || calculateChecksum(patch.payload),
+      backupSnapshotId: backupId,
+      meta: {
+        recipesCount: updatedRecipes.length,
+        serverProtocol: 'HTTPS / TLS 1.3'
+      }
+    });
+
     return {
       success: true,
       updatedRecipes,
@@ -362,6 +381,27 @@ export function rollbackToBackup(backupId: string): {
       return h;
     });
     savePatchHistory(updatedHistory);
+
+    // Record Rollback in Version Ledger
+    recordVersionEvent({
+      id: `ver_rollback_${Date.now()}`,
+      version: CURRENT_APP_VERSION,
+      type: 'rollback',
+      title: `Откат к точке восстановления: ${snapshot.reason}`,
+      description: `Восстановлено ${snapshot.recipes.length} технологических рецептур и настройки пульта из снимка ${snapshot.id}.`,
+      author: snapshot.settings.operatorName || 'Главный технолог ООО «АЛЕКС»',
+      changelog: [
+        `Выполнен откат системы к резервной копии от ${new Date(snapshot.timestamp).toLocaleString('ru-RU')}`,
+        `Восстановлены технологические формулы (${snapshot.recipes.length} шт.)`,
+        `Восстановлена активная рецептура: ${snapshot.currentRecipeId || 'По умолчанию'}`
+      ],
+      affectedRecipes: snapshot.recipes.map((r) => r.code),
+      checksum: calculateChecksum(snapshot.recipes),
+      backupSnapshotId: backupId,
+      meta: {
+        recipesCount: snapshot.recipes.length
+      }
+    });
 
     return {
       success: true,

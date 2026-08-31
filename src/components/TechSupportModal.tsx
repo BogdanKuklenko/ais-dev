@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Radio,
   Server,
-  Fingerprint
+  Fingerprint,
+  History
 } from 'lucide-react';
 import { AppSettings, ServerApiSslConfig } from '../types';
 import { testServerSslConnection, SslTestResult } from '../lib/serverApiClient';
@@ -25,6 +26,7 @@ interface TechSupportModalProps {
   onUpdateSettings: (newSettings: AppSettings) => void;
   onClose: () => void;
   onOpenUpdates?: () => void;
+  onOpenVersionHistory?: () => void;
   onTriggerForcedUpdateTest?: () => void;
 }
 
@@ -33,6 +35,7 @@ export const TechSupportModal: React.FC<TechSupportModalProps> = ({
   onUpdateSettings,
   onClose,
   onOpenUpdates,
+  onOpenVersionHistory,
   onTriggerForcedUpdateTest,
 }) => {
   const [showApiKey, setShowApiKey] = useState(false);
@@ -475,19 +478,35 @@ export const TechSupportModal: React.FC<TechSupportModalProps> = ({
                 Загрузка обновлений по защищенному каналу SSL (OTA) или установка файлов патчей (.alex-patch / .patch) с флешки.
               </p>
             </div>
-            {onOpenUpdates && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onOpenUpdates();
-                }}
-                className="px-4 py-2.5 rounded-xl bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] font-bold text-xs sm:text-sm flex items-center gap-2 transition shrink-0"
-              >
-                <RefreshCw className="w-4 h-4 text-[#E63B00]" />
-                <span>Центр обновлений</span>
-              </button>
-            )}
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+              {onOpenVersionHistory && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenVersionHistory();
+                  }}
+                  className="px-3.5 py-2.5 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE4] dark:bg-[#202229] dark:hover:bg-[#2A2D36] border border-[#E0E0D9] dark:border-[#333640] text-[#111215] dark:text-white font-bold text-xs sm:text-sm flex items-center gap-2 transition shrink-0"
+                  title="Открыть паспорт версий и журнал модификаций"
+                >
+                  <History className="w-4 h-4 text-[#E63B00]" />
+                  <span>Учёт версий</span>
+                </button>
+              )}
+              {onOpenUpdates && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenUpdates();
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] font-bold text-xs sm:text-sm flex items-center gap-2 transition shrink-0"
+                >
+                  <RefreshCw className="w-4 h-4 text-[#E63B00]" />
+                  <span>Центр обновлений</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Support Email */}

@@ -17,6 +17,7 @@ import {
   Lock
 } from 'lucide-react';
 import { Recipe, AppSettings } from '../types';
+import { CURRENT_APP_VERSION } from '../lib/patchEngine';
 
 export type ActiveTab = 'console' | 'journal' | 'recipes' | 'archive';
 
@@ -34,6 +35,7 @@ interface HeaderProps {
   onOpenRecipeSelect: () => void;
   onOpenSupport: () => void;
   onOpenUpdates: () => void;
+  onOpenVersionHistory?: () => void;
   onToggleSound: () => void;
   onToggleTheme: () => void;
   isDarkMode: boolean;
@@ -55,6 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenRecipeSelect,
   onOpenSupport,
   onOpenUpdates,
+  onOpenVersionHistory,
   onToggleSound,
   onToggleTheme,
   isDarkMode,
@@ -188,6 +191,22 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
             </div>
+
+            {/* Version History Button */}
+            {onOpenVersionHistory && (
+              <button
+                type="button"
+                onClick={onOpenVersionHistory}
+                id="btn-header-version-history"
+                className="px-3 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE5] dark:bg-[#1C1E23] dark:hover:bg-[#252830] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-sm font-bold flex items-center gap-1.5 transition group"
+                title="Паспорт версий и журнал модификаций ПО"
+              >
+                <History className="w-4 h-4 text-[#E63B00] group-hover:rotate-[-20deg] transition-transform" />
+                <span className="font-mono text-xs font-black bg-[#E63B00]/10 text-[#E63B00] px-1.5 py-0.5 rounded">
+                  v{CURRENT_APP_VERSION}
+                </span>
+              </button>
+            )}
 
             {/* Updates Button */}
             <button
