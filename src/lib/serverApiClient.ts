@@ -12,7 +12,9 @@ import {
   CURRENT_APP_VERSION, 
   SAMPLE_PATCHES, 
   applyAlexPatch, 
-  calculateChecksum 
+  calculateChecksum,
+  checkNetworkUpdates,
+  downloadSslPatchPackage,
 } from './patchEngine';
 import { 
   saveEmergencySessionSnapshot, 
@@ -20,7 +22,8 @@ import {
   saveBatchDraft, 
   saveRecipes, 
   saveSettings,
-  saveStoredCurrentRecipeId
+  saveStoredCurrentRecipeId,
+  OFFICIAL_CLOUD_UPDATE_MANIFEST_URL,
 } from './storage';
 
 export interface SslTestResult {
@@ -57,7 +60,7 @@ export async function testServerSslConnection(config: ServerApiSslConfig): Promi
     };
   }
 
-  const url = config.serverUrl.trim();
+  const url = (config.serverUrl || OFFICIAL_CLOUD_UPDATE_MANIFEST_URL).trim();
   if (!url.startsWith('https://') && !url.startsWith('http://')) {
     return {
       success: false,
@@ -73,54 +76,112 @@ export async function testServerSslConnection(config: ServerApiSslConfig): Promi
     };
   }
 
-  // Try real HTTPS fetch if reachable
+  const manifestUrl = url.endsWith('.json') ? url : `${url.replace(/\/+$/, '')}/update-manifest.json`;
+  const isSsl = manifestUrl.startsWith('https://');
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(manifestUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
-        'Authorization': `Bearer ${config.apiKey}`,
-        'X-Alex-Plant-Client': 'Alex-Dosing-Industrial-v2.4',
-        'X-Alex-SSL-Mode': config.sslMode,
-        'X-Alex-SSL-Fingerprint': config.sslCertFingerprint || '',
       },
-      signal: AbortSignal.timeout(4000)
+      signal: AbortSignal.timeout(8000)
     });
 
     const latencyMs = Math.round(performance.now() - startTime);
 
     if (res.ok) {
+      let latest = '';
+      try {
+        const data = await res.json() as { latestVersion?: string; patchPackage?: unknown };
+        latest = typeof data?.latestVersion === 'string' ? data.latestVersion : '';
+        if (!latest || !data.patchPackage) {
+          return {
+            success: false,
+            latencyMs,
+            tlsVersion: isSsl ? 'TLS (handshake OK)' : 'HTTP',
+            cipher: isSsl ? 'шифруется браузером / Electron' : 'без TLS',
+            certIssuer: isSsl ? 'GitHub / системное хранилище сертификатов' : 'N/A',
+            certValidUntil: 'N/A',
+            fingerprintMatch: false,
+            serverTime: new Date().toISOString(),
+            message: 'HTTPS 200, но JSON без latestVersion или patchPackage.',
+            error: 'Invalid OTA JSON'
+          };
+        }
+      } catch {
+        return {
+          success: false,
+          latencyMs,
+          tlsVersion: isSsl ? 'TLS (handshake OK)' : 'HTTP',
+          cipher: 'N/A',
+          certIssuer: 'N/A',
+          certValidUntil: 'N/A',
+          fingerprintMatch: false,
+          serverTime: new Date().toISOString(),
+          message: 'Сервер ответил 200, но тело не JSON.',
+          error: 'Not JSON'
+        };
+      }
       return {
         success: true,
         latencyMs,
-        tlsVersion: 'TLS 1.3 (RFC 8446)',
-        cipher: 'TLS_AES_256_GCM_SHA384 (256-bit)',
-        certIssuer: 'Alex Plant Root CA v2 (Industrial Secure PKI)',
-        certValidUntil: '2028-12-31 23:59:59 GMT',
-        fingerprintMatch: true,
+        tlsVersion: isSsl ? 'TLS (handshake OK)' : 'HTTP',
+        cipher: isSsl ? 'шифруется браузером / Electron' : 'без TLS',
+        certIssuer: isSsl ? 'GitHub / системное хранилище сертификатов' : 'N/A',
+        certValidUntil: 'N/A',
+        fingerprintMatch: false,
         serverTime: new Date().toISOString(),
-        message: `Успешное соединение по защищенному протоколу HTTPS/TLS 1.3 (Пинг: ${latencyMs}мс). Авторизация подтверждена.`
+        message: `Манифест v${latest} получен (${res.status}) за ${latencyMs} мс.`
       };
     }
-  } catch {
-    // Network / CORS simulation for factory intranet
+
+    if (res.status === 404 && isSsl) {
+      return {
+        success: false,
+        latencyMs,
+        tlsVersion: 'TLS (handshake OK)',
+        cipher: 'шифруется браузером / Electron',
+        certIssuer: 'сертификат хоста (HTTPS)',
+        certValidUntil: 'N/A',
+        fingerprintMatch: false,
+        serverTime: new Date().toISOString(),
+        message: `Шифрование TLS установлено, но файл обновления не найден (HTTP 404): ${manifestUrl}`,
+        error: 'HTTP 404'
+      };
+    }
+
+    return {
+      success: false,
+      latencyMs,
+      tlsVersion: isSsl ? 'TLS (handshake OK)' : 'HTTP',
+      cipher: 'N/A',
+      certIssuer: 'N/A',
+      certValidUntil: 'N/A',
+      fingerprintMatch: false,
+      serverTime: new Date().toISOString(),
+      message: `Сервер ответил HTTP ${res.status}: ${res.statusText}`,
+      error: `HTTP ${res.status}`
+    };
+  } catch (err: unknown) {
+    const latencyMs = Math.round(performance.now() - startTime);
+    const errMsg = err instanceof Error ? err.message : 'сеть недоступна';
+    const isDns = /Failed to fetch|Name not resolved|ERR_NAME_NOT_RESOLVED|not resolve/i.test(errMsg);
+    return {
+      success: false,
+      latencyMs,
+      tlsVersion: 'N/A',
+      cipher: 'N/A',
+      certIssuer: 'N/A',
+      certValidUntil: 'N/A',
+      fingerprintMatch: false,
+      serverTime: new Date().toISOString(),
+      message: isDns
+        ? `Домен не существует в DNS (${manifestUrl}). Раньше в программе стоял вымышленный api.alex-mixes.ru.`
+        : `Нет соединения: ${errMsg}`,
+      error: errMsg
+    };
   }
-
-  // Industrial simulated SSL handshake response for intranet/factory servers
-  await new Promise((r) => setTimeout(r, 450));
-  const latencyMs = Math.round(performance.now() - startTime);
-
-  return {
-    success: true,
-    latencyMs: Math.max(32, latencyMs),
-    tlsVersion: 'TLS 1.3 (ChaCha20-Poly1305 / AES-256-GCM)',
-    cipher: 'ECDHE-ECDSA-AES256-GCM-SHA384',
-    certIssuer: 'ООО «АЛЕКС» Корпоративный удостоверяющий центр (SSL PKI)',
-    certValidUntil: '2028-12-31 23:59:59 GMT',
-    fingerprintMatch: Boolean(config.sslCertFingerprint && config.sslCertFingerprint.length > 10),
-    serverTime: new Date().toISOString(),
-    message: `Защищенный SSL-канал подтвержден. Шифрование: TLS 1.3 (256 бит). Ключ API валидирован сервером.`
-  };
 }
 
 /**
@@ -141,35 +202,22 @@ export async function pollServerForUpdates(
   }
 
   try {
-    // Check real endpoint if available
-    if (config.serverUrl && config.serverUrl.startsWith('https://')) {
-      try {
-        const res = await fetch(`${config.serverUrl.replace(/\/$/, '')}/check-update?version=${currentVersion}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${config.apiKey}`,
-            'X-Alex-Client-Version': currentVersion,
-          },
-          signal: AbortSignal.timeout(3000)
-        });
-        if (res.ok) {
-          const data = await res.json();
-          return {
-            hasUpdate: Boolean(data.hasUpdate),
-            isForced: Boolean(data.isForced || data.mandatory),
-            manifest: data.manifest,
-            patch: data.patchPackage,
-          };
-        }
-      } catch {
-        // Fallback to factory simulation
-      }
+    const result = await checkNetworkUpdates(config.serverUrl);
+    let patch = result.manifest?.patchPackage;
+    if (result.hasUpdate && result.manifest && !patch) {
+      const loaded = await downloadSslPatchPackage(result.manifest, result.serverUrl);
+      patch = loaded.patch;
     }
+    return {
+      hasUpdate: result.hasUpdate,
+      isForced: Boolean(result.manifest?.mandatory),
+      manifest: result.manifest,
+      patch,
+      message: result.error || result.warning,
+    };
   } catch {
-    // Ignore polling errors
+    return { hasUpdate: false, isForced: false };
   }
-
-  return { hasUpdate: false, isForced: false };
 }
 
 /**
@@ -260,7 +308,7 @@ export function executeZeroLossForceUpdate(params: {
       serverApiSsl: {
         ...(currentSettings.serverApiSsl || {
           enabled: true,
-          serverUrl: 'https://api.alex-mixes.ru/v1/ota',
+          serverUrl: OFFICIAL_CLOUD_UPDATE_MANIFEST_URL,
           apiKey: 'ALEX-PLANT-SECURE-KEY-2026',
           sslMode: 'strict',
           pollIntervalSec: 30,

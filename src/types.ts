@@ -75,7 +75,7 @@ export interface ShiftSummary {
 
 export interface ServerApiSslConfig {
   enabled: boolean;
-  serverUrl: string; // e.g. 'https://api.alex-mixes.ru/v1/ota'
+  serverUrl: string; // HTTPS URL манифеста, например https://ota.example.com/update-manifest.json
   apiKey: string; // API Key / Bearer Token
   sslMode: 'strict' | 'custom_cert' | 'pinning';
   sslCertFingerprint?: string; // SHA-256 fingerprint, e.g. 7F:1B:3C:99:...
@@ -116,7 +116,7 @@ export interface BatchDraft {
   updatedAt: string;
 }
 
-export type PatchType = 'recipes_update' | 'system_config' | 'full_rollup' | 'hotfix';
+export type PatchType = 'recipes_update' | 'system_config' | 'full_rollup' | 'full_update' | 'hotfix';
 
 export interface AlexPatchPackage {
   format: 'alex_patch_v1';
@@ -175,35 +175,5 @@ export interface BackupSnapshot {
   recipes: Recipe[];
   settings: AppSettings;
   currentRecipeId: string | null;
-}
-
-export type VersionEventType = 
-  | 'release'
-  | 'patch'
-  | 'formula_update'
-  | 'calibration'
-  | 'rollback'
-  | 'manual_audit'
-  | 'ota_sync';
-
-export interface VersionLogEntry {
-  id: string;
-  version: string;
-  timestamp: string; // ISO string
-  type: VersionEventType;
-  title: string;
-  description: string;
-  author: string;
-  changelog: string[];
-  affectedRecipes?: string[];
-  checksum?: string;
-  backupSnapshotId?: string;
-  isCurrent?: boolean;
-  meta?: {
-    recipesCount?: number;
-    changedComponents?: string[];
-    serverProtocol?: string;
-    targetMinVersion?: string;
-  };
 }
 

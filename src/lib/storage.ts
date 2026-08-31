@@ -7,8 +7,7 @@ import {
   PatchHistoryRecord,
   BackupSnapshot,
   ServerApiSslConfig,
-  SessionStateSnapshot,
-  VersionLogEntry
+  SessionStateSnapshot
 } from '../types';
 import { DEFAULT_RECIPES } from '../data/defaultRecipes';
 
@@ -24,20 +23,35 @@ const STORAGE_KEYS = {
   BACKUP_SNAPSHOTS: 'alex_production_backup_snapshots_v1',
   UPDATE_SERVER_URL: 'alex_production_update_server_url_v1',
   SESSION_PRESERVATION: 'alex_production_session_preservation_v1',
-  VERSION_LOG: 'alex_production_version_log_v1',
+  INSTALLED_APP_VERSION: 'alex_production_installed_version_v1',
+  LAST_OTA_PAYLOAD_CHECKSUM: 'alex_production_last_ota_payload_cs_v1',
 };
+
+/** HTTPS OTA: GitHub raw of public/update-manifest.json (Cloud Run preview is empty 404). */
+export const OFFICIAL_CLOUD_UPDATE_HOST = 'raw.githubusercontent.com';
+export const OFFICIAL_CLOUD_UPDATE_MANIFEST_URL =
+  'https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json';
+
+export function isPlaceholderUpdateHost(url: string): boolean {
+  const u = (url || '').toLowerCase();
+  return (
+    u.includes('alex-mixes.ru') ||
+    u.includes('updates.alex-mixes.ru') ||
+    u.includes('api.alex-mixes.ru') ||
+    u.includes('ais-pre-355eyhx4molixaeonprgkr-542213303113')
+  );
+}
 
 export const DEFAULT_SSL_CONFIG: ServerApiSslConfig = {
   enabled: true,
-  serverUrl: 'https://api.alex-mixes.ru/v1/ota',
+  serverUrl: OFFICIAL_CLOUD_UPDATE_MANIFEST_URL,
   apiKey: 'ALEX-PLANT-SECURE-KEY-2026',
   sslMode: 'strict',
-  sslCertFingerprint: 'SHA256: 7F:1B:3C:99:A4:02:88:51:29:EC:B7:FE:63:10:8D:19:D4:5A:66:31:09:A5:18:7C',
+  sslCertFingerprint: '',
   pollIntervalSec: 30,
   autoForceApplyMandatoryUpdates: true,
   preserveSessionOnHotReload: true,
-  status: 'connected',
-  lastSyncTime: new Date().toISOString(),
+  status: 'disconnected',
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -82,7 +96,17 @@ export function getStoredSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.SETTINGS);
     if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) as Partial<AppSettings>;
+    const merged: AppSettings = { ...DEFAULT_SETTINGS, ...parsed };
+    merged.serverApiSsl = {
+      ...DEFAULT_SSL_CONFIG,
+      ...(parsed.serverApiSsl || {}),
+    };
+    if (isPlaceholderUpdateHost(merged.serverApiSsl.serverUrl || '')) {
+      merged.serverApiSsl.serverUrl = OFFICIAL_CLOUD_UPDATE_MANIFEST_URL;
+      merged.serverApiSsl.status = 'disconnected';
+    }
+    return merged;
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -327,23 +351,6 @@ export function savePatchHistory(history: PatchHistoryRecord[]): void {
   }
 }
 
-export function getStoredVersionLog(): VersionLogEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.VERSION_LOG);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-export function saveStoredVersionLog(log: VersionLogEntry[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEYS.VERSION_LOG, JSON.stringify(log));
-  } catch (e) {
-    console.error('Failed to save version log', e);
-  }
-}
-
 export function getBackupSnapshots(): BackupSnapshot[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.BACKUP_SNAPSHOTS);
@@ -363,12 +370,12 @@ export function saveBackupSnapshots(snapshots: BackupSnapshot[]): void {
   }
 }
 
-export const DEFAULT_PRODUCTION_UPDATE_URL = 'https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json';
+export const DEFAULT_PRODUCTION_UPDATE_URL = OFFICIAL_CLOUD_UPDATE_MANIFEST_URL;
 
 export function getStoredUpdateServerUrl(): string {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.UPDATE_SERVER_URL);
-    if (!raw || raw.includes('updates.alex-mixes.ru') || raw.includes('api.alex-mixes.ru')) {
+    if (!raw || isPlaceholderUpdateHost(raw)) {
       return DEFAULT_PRODUCTION_UPDATE_URL;
     }
     return raw;
@@ -382,6 +389,38 @@ export function saveStoredUpdateServerUrl(url: string): void {
     localStorage.setItem(STORAGE_KEYS.UPDATE_SERVER_URL, url);
   } catch (e) {
     console.error('Failed to save update server URL', e);
+  }
+}
+
+export function getStoredAppVersion(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.INSTALLED_APP_VERSION);
+  } catch {
+    return null;
+  }
+}
+
+export function saveStoredAppVersion(version: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.INSTALLED_APP_VERSION, version);
+  } catch (e) {
+    console.error('Failed to save installed app version', e);
+  }
+}
+
+export function getLastOtaPayloadChecksum(): string | null {
+  try {
+    return localStorage.getItem(STORAGE_KEYS.LAST_OTA_PAYLOAD_CHECKSUM);
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastOtaPayloadChecksum(checksum: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.LAST_OTA_PAYLOAD_CHECKSUM, checksum);
+  } catch (e) {
+    console.error('Failed to save OTA payload checksum', e);
   }
 }
 

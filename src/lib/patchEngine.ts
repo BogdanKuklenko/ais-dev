@@ -14,11 +14,21 @@ import {
   savePatchHistory, 
   getBackupSnapshots, 
   saveBackupSnapshots, 
-  saveStoredCurrentRecipeId 
+  saveStoredCurrentRecipeId,
+  OFFICIAL_CLOUD_UPDATE_MANIFEST_URL,
+  isPlaceholderUpdateHost,
+  getStoredAppVersion,
+  saveStoredAppVersion,
+  getLastOtaPayloadChecksum,
+  saveLastOtaPayloadChecksum,
 } from './storage';
-import { recordVersionEvent } from './versionTracker';
+import bundledUpdateManifest from '../../public/update-manifest.json';
 
 export const CURRENT_APP_VERSION = '2.4.0';
+
+export function getEffectiveAppVersion(): string {
+  return getStoredAppVersion() || CURRENT_APP_VERSION;
+}
 
 /**
  * Simple hash for checksum verification
@@ -40,64 +50,9 @@ export function calculateChecksum(data: unknown): string {
 export const SAMPLE_PATCHES: AlexPatchPackage[] = [
   {
     format: 'alex_patch_v1',
-    patchId: 'patch_release_v260_official',
-    version: '2.6.0',
-    title: 'Официальный пакет v2.6.0: «П-25 Люкс Гранит и С-45 Зима»',
-    description: 'Внедрение новых рецептур повышенной адгезии (П-25 Люкс), морозостойкой штукатурки (С-45 Зима) и калибровка отсечки шнековых дозаторов.',
-    releaseDate: '2026-08-31',
-    author: 'Главный технолог ООО «АЛЕКС» Васильев С.М.',
-    patchType: 'recipes_update',
-    targetMinVersion: '2.0.0',
-    changelog: [
-      'Добавлена технологическая карта П-25 Люкс Гранит (ГОСТ 31357)',
-      'Добавлена морозостойкая штукатурка С-45 Теплофасад (до -15°C)',
-      'Обновлена норма цемента М-500 в базовом клее П-20 Про (285 кг)',
-      'Скорректированы весовые допуски микрокомпонентов (±1.0%)'
-    ],
-    payload: {
-      systemVersion: '2.6.0',
-      recipesToAddOrUpdate: [
-        {
-          id: 'rec-p25-lux-granit',
-          code: 'П-25 Люкс',
-          name: 'Клей усиленный для тяжелого керамогранита и камня (ГОСТ 31357)',
-          category: 'Клей',
-          description: 'Высокоадгезивный цементный клей класса C2TE для крупноформатного керамогранита и фасадов.',
-          targetTotalWeightKg: 1000,
-          updatedAt: '2026-08-31T09:00:00Z',
-          components: [
-            { id: 'cp25-1', name: 'Портландцемент ЦЕМ I 52.5Н', fraction: 'М-500 Д0', targetWeightKg: 320, unit: 'кг', tolerancePercent: 1.0, color: '#475569' },
-            { id: 'cp25-2', name: 'Песок кварцевый очищенный', fraction: '0.1-0.63 мм', targetWeightKg: 590, unit: 'кг', tolerancePercent: 1.5, color: '#D97706' },
-            { id: 'cp25-3', name: 'Микрокальцит фракционированный', fraction: '0-0.1 мм', targetWeightKg: 80, unit: 'кг', tolerancePercent: 2.0, color: '#A8A29E' },
-            { id: 'cp25-4', name: 'Эфир целлюлозы высокой вязкости', fraction: 'порошок', targetWeightKg: 4.5, unit: 'кг', tolerancePercent: 1.0, color: '#065F46' },
-            { id: 'cp25-5', name: 'Редиспергируемый полимер VAE', fraction: 'полимер', targetWeightKg: 5.5, unit: 'кг', tolerancePercent: 1.0, color: '#7C3AED' }
-          ]
-        },
-        {
-          id: 'rec-s45-winter-fasad',
-          code: 'С-45 Зима',
-          name: 'Штукатурка фасадная морозостойкая Теплофасад (до -15°C)',
-          category: 'Штукатурка',
-          description: 'Защитно-отделочная цементная штукатурка с противоморозным модификатором для зимнего бетонирования.',
-          targetTotalWeightKg: 1000,
-          updatedAt: '2026-08-31T09:00:00Z',
-          components: [
-            { id: 'cs45-1', name: 'Портландцемент ЦЕМ I 42.5', fraction: 'М-500', targetWeightKg: 260, unit: 'кг', tolerancePercent: 1.0, color: '#64748B' },
-            { id: 'cs45-2', name: 'Песок кварцевый крупный', fraction: '0.63-1.25 мм', targetWeightKg: 400, unit: 'кг', tolerancePercent: 1.5, color: '#D97706' },
-            { id: 'cs45-3', name: 'Песок кварцевый мелкий', fraction: '0.1-0.63 мм', targetWeightKg: 250, unit: 'кг', tolerancePercent: 1.5, color: '#F59E0B' },
-            { id: 'cs45-4', name: 'Известь гидратная пушонка', fraction: 'порошок', targetWeightKg: 70, unit: 'кг', tolerancePercent: 2.0, color: '#CBD5E1' },
-            { id: 'cs45-5', name: 'Противоморозный комплекс нитрита натрия', fraction: 'модификатор', targetWeightKg: 15.0, unit: 'кг', tolerancePercent: 1.0, color: '#0284C7' },
-            { id: 'cs45-6', name: 'Водоудерживающая добавка', fraction: 'порошок', targetWeightKg: 5.0, unit: 'кг', tolerancePercent: 1.0, color: '#059669' }
-          ]
-        }
-      ]
-    }
-  },
-  {
-    format: 'alex_patch_v1',
     patchId: 'patch_2026_winter_series_v250',
     version: '2.5.0',
-    title: 'Пакет рецептур: «Зимняя серия и Клей К-15 Экстра»',
+    title: 'Пакет рецептур: «Зимняя серия 2026 и Клей К-15 Экстра»',
     description: 'Добавление рецептуры штукатурки с противоморозной добавкой (С-41 Зима) и усиленного плиточного клея К-15.',
     releaseDate: '2026-08-20',
     author: 'Главный технолог ООО «АЛЕКС» Васильев С.М.',
@@ -127,8 +82,47 @@ export const SAMPLE_PATCHES: AlexPatchPackage[] = [
             { id: 'cw-4', name: 'Эфир целлюлозы (MHEC)', fraction: 'порошок', targetWeightKg: 2.5, unit: 'кг', tolerancePercent: 1.0, color: '#065F46' },
             { id: 'cw-5', name: 'Противоморозный комплекс', fraction: 'порошок -15°C', targetWeightKg: 17.5, unit: 'кг', tolerancePercent: 1.0, color: '#0284C7' }
           ]
+        },
+        {
+          id: 'rec_k15_extra',
+          code: 'К-15 Экстра',
+          name: 'Клей для керамогранита и крупного формата C2TE',
+          category: 'Клей',
+          description: 'Высокоадгезионный клей повышенной эластичности для тяжелой плитки и теплых полов.',
+          targetTotalWeightKg: 1000,
+          updatedAt: '2026-08-20T08:00:00Z',
+          components: [
+            { id: 'ck-1', name: 'Портландцемент белый/серый', fraction: 'ЦЕМ I 42.5Н', targetWeightKg: 340, unit: 'кг', tolerancePercent: 1.0, color: '#475569' },
+            { id: 'ck-2', name: 'Песок фракционированный', fraction: '0.1-0.315 мм', targetWeightKg: 580, unit: 'кг', tolerancePercent: 1.5, color: '#D97706' },
+            { id: 'ck-3', name: 'Микрокальцит МК-100', fraction: '100 мкм', targetWeightKg: 60, unit: 'кг', tolerancePercent: 2.0, color: '#94A3B8' },
+            { id: 'ck-4', name: 'РПП Редиспергируемый порошок', fraction: 'VAE эласт.', targetWeightKg: 16.0, unit: 'кг', tolerancePercent: 1.0, color: '#7C3AED' },
+            { id: 'ck-5', name: 'Эфир крахмала модифицированный', fraction: 'порошок', targetWeightKg: 4.0, unit: 'кг', tolerancePercent: 1.0, color: '#059669' }
+          ]
         }
       ]
+    }
+  },
+  {
+    format: 'alex_patch_v1',
+    patchId: 'patch_2026_hotfix_tolerances_v241',
+    version: '2.4.1',
+    title: 'Hotfix: «Калибровка весовых допусков и метрология»',
+    description: 'Ужесточение предельных отклонений по ГОСТ 31357-2007 для обеспечения высшей категории качества смеси.',
+    releaseDate: '2026-08-15',
+    author: 'Начальник заводской лаборатории и ОТК Ковалева Е.Д.',
+    patchType: 'hotfix',
+    targetMinVersion: '2.0.0',
+    changelog: [
+      'Установлен строгий технологический допуск ±1.0% на портландцемент',
+      'Включен звуковой сигнал предупреждения при отклонении свыше 1.2%',
+      'Обновлена норма крупнофракционного песка в стяжке СТ-10'
+    ],
+    payload: {
+      systemVersion: '2.4.1',
+      settingsUpdate: {
+        soundEnabled: true,
+        autoAdvanceOnEnter: true
+      }
     }
   }
 ];
@@ -282,6 +276,12 @@ export function applyAlexPatch(
       saveSettings(updatedSettings);
     }
 
+    const installedVersion = patch.payload.systemVersion || patch.version;
+    if (installedVersion) {
+      saveStoredAppVersion(installedVersion);
+    }
+    saveLastOtaPayloadChecksum(calculateChecksum(patch.payload));
+
     // 5. Register in Patch History
     const historyRecord: PatchHistoryRecord = {
       id: `ph_${Date.now()}`,
@@ -298,24 +298,6 @@ export function applyAlexPatch(
 
     const currentHistory = getPatchHistory();
     savePatchHistory([historyRecord, ...currentHistory]);
-
-    // 6. Record in Master Version Ledger
-    recordVersionEvent({
-      id: `ver_log_${patch.patchId}_${Date.now()}`,
-      version: patch.version || CURRENT_APP_VERSION,
-      type: patch.patchType === 'recipes_update' ? 'patch' : 'release',
-      title: patch.title,
-      description: patch.description,
-      author: patch.author,
-      changelog: patch.changelog && patch.changelog.length > 0 ? patch.changelog : ['Успешная установка технологического пакета'],
-      affectedRecipes: patch.payload.recipesToAddOrUpdate?.map((r) => r.code) || [],
-      checksum: patch.checksum || calculateChecksum(patch.payload),
-      backupSnapshotId: backupId,
-      meta: {
-        recipesCount: updatedRecipes.length,
-        serverProtocol: 'HTTPS / TLS 1.3'
-      }
-    });
 
     return {
       success: true,
@@ -381,27 +363,6 @@ export function rollbackToBackup(backupId: string): {
       return h;
     });
     savePatchHistory(updatedHistory);
-
-    // Record Rollback in Version Ledger
-    recordVersionEvent({
-      id: `ver_rollback_${Date.now()}`,
-      version: CURRENT_APP_VERSION,
-      type: 'rollback',
-      title: `Откат к точке восстановления: ${snapshot.reason}`,
-      description: `Восстановлено ${snapshot.recipes.length} технологических рецептур и настройки пульта из снимка ${snapshot.id}.`,
-      author: snapshot.settings.operatorName || 'Главный технолог ООО «АЛЕКС»',
-      changelog: [
-        `Выполнен откат системы к резервной копии от ${new Date(snapshot.timestamp).toLocaleString('ru-RU')}`,
-        `Восстановлены технологические формулы (${snapshot.recipes.length} шт.)`,
-        `Восстановлена активная рецептура: ${snapshot.currentRecipeId || 'По умолчанию'}`
-      ],
-      affectedRecipes: snapshot.recipes.map((r) => r.code),
-      checksum: calculateChecksum(snapshot.recipes),
-      backupSnapshotId: backupId,
-      meta: {
-        recipesCount: snapshot.recipes.length
-      }
-    });
 
     return {
       success: true,
@@ -473,32 +434,108 @@ export function exportPatchFile(patch: AlexPatchPackage): void {
   URL.revokeObjectURL(url);
 }
 
-export const DEFAULT_CLOUD_UPDATE_SERVER = 'https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json';
+export const DEFAULT_CLOUD_UPDATE_SERVER = OFFICIAL_CLOUD_UPDATE_MANIFEST_URL;
+
+function rewriteGithubHtmlUrlToRaw(url: string): string {
+  const blob = url.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/i);
+  if (blob) {
+    return `https://raw.githubusercontent.com/${blob[1]}/${blob[2]}/${blob[3]}/${blob[4]}`;
+  }
+  if (/^https:\/\/github\.com\/BogdanKuklenko\/ais-dev(\/(tree\/main)?)?$/i.test(url.replace(/\/+$/, ''))) {
+    return DEFAULT_CLOUD_UPDATE_SERVER;
+  }
+  return url;
+}
+
+function normalizeToManifestUrl(serverUrl?: string): string {
+  const raw = (serverUrl && serverUrl.trim()) ? serverUrl.trim() : DEFAULT_CLOUD_UPDATE_SERVER;
+  if (isPlaceholderUpdateHost(raw)) {
+    return DEFAULT_CLOUD_UPDATE_SERVER;
+  }
+  const fromGithub = rewriteGithubHtmlUrlToRaw(raw.replace(/\/+$/, ''));
+  if (fromGithub !== raw.replace(/\/+$/, '')) {
+    return fromGithub.endsWith('.json') ? fromGithub : DEFAULT_CLOUD_UPDATE_SERVER;
+  }
+  const clean = raw.replace(/\/+$/, '');
+  if (clean.endsWith('.json')) return clean;
+  return `${clean}/update-manifest.json`;
+}
+
+function parseUpdateManifest(data: unknown, fallbackUrl: string, isSsl: boolean): UpdateManifest | null {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as Record<string, unknown>;
+  const patchPackage = d.patchPackage as UpdateManifest['patchPackage'];
+  const latestVersion = typeof d.latestVersion === 'string' ? d.latestVersion : '';
+  if (!latestVersion || !patchPackage) return null;
+  const rawDownload = typeof d.downloadUrl === 'string' ? d.downloadUrl : fallbackUrl;
+  const downloadUrl = isPlaceholderUpdateHost(rawDownload) ? fallbackUrl : rawDownload;
+  return {
+    latestVersion,
+    minSupportedVersion: typeof d.minSupportedVersion === 'string' ? d.minSupportedVersion : '2.0.0',
+    releaseDate: typeof d.releaseDate === 'string' ? d.releaseDate : new Date().toISOString().slice(0, 10),
+    title: typeof d.title === 'string' ? d.title : `Релиз v${latestVersion}`,
+    description: typeof d.description === 'string' ? d.description : 'Пакет обновления технологического пульта',
+    changelog: Array.isArray(d.changelog) ? d.changelog as string[] : ['Плановое обновление системы'],
+    mandatory: Boolean(d.mandatory),
+    packageUrl: downloadUrl,
+    downloadUrl,
+    checksum: typeof d.checksum === 'string' ? d.checksum : undefined,
+    serverProtocol: isSsl ? 'HTTPS / TLS 1.3' : 'HTTP',
+    sslVerified: isSsl,
+    patchPackage,
+  };
+}
+
+function bundledFactoryManifest(): UpdateManifest | null {
+  return parseUpdateManifest(bundledUpdateManifest, 'bundled://update-manifest.json', false);
+}
+
+export function isRemotePatchPending(manifest: UpdateManifest): boolean {
+  if (isNewerVersion(manifest.latestVersion, getEffectiveAppVersion())) {
+    return true;
+  }
+  const pkg = manifest.patchPackage;
+  if (!pkg) return false;
+  if (pkg.patchId) {
+    const already = getPatchHistory().some(
+      (h) => h.patchId === pkg.patchId && h.status === 'applied'
+    );
+    if (!already) return true;
+  }
+  if (pkg.payload) {
+    const lastCs = getLastOtaPayloadChecksum();
+    if (lastCs && calculateChecksum(pkg.payload) !== lastCs) return true;
+  }
+  return false;
+}
 
 /**
- * Checks for updates over network via secure HTTPS / SSL (OTA)
+ * Checks for updates over HTTPS (GitHub raw manifest), then falls back to the
+ * factory package shipped inside the program.
  */
 export async function checkNetworkUpdates(serverUrl?: string): Promise<{
   hasUpdate: boolean;
   manifest?: UpdateManifest;
   error?: string;
+  warning?: string;
   latencyMs?: number;
   sslVerified: boolean;
   serverUrl: string;
+  source: 'remote' | 'bundled';
 }> {
-  const targetBase = (serverUrl && serverUrl.trim()) ? serverUrl.trim() : DEFAULT_CLOUD_UPDATE_SERVER;
-  const cleanBase = targetBase.replace(/\/+$/, '');
-  const manifestUrl = cleanBase.endsWith('.json') ? cleanBase : `${cleanBase}/update-manifest.json?t=${Date.now()}`;
-  const isSsl = cleanBase.startsWith('https://');
-
+  const manifestUrl = normalizeToManifestUrl(serverUrl);
+  const isSsl = manifestUrl.startsWith('https://');
   const startTime = performance.now();
+
+  let remoteError: string | undefined;
 
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-    const res = await fetch(manifestUrl, {
+    const res = await fetch(`${manifestUrl}${manifestUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
       method: 'GET',
+      cache: 'no-store',
       headers: {
         'Accept': 'application/json',
       },
@@ -508,66 +545,113 @@ export async function checkNetworkUpdates(serverUrl?: string): Promise<{
     clearTimeout(timeoutId);
     const latencyMs = Math.round(performance.now() - startTime);
 
-    if (!res.ok) {
-      return {
-        hasUpdate: false,
-        error: `Сервер вернул HTTP ${res.status}: ${res.statusText}. Проверьте адрес сервера обновлений.`,
-        latencyMs,
-        sslVerified: isSsl,
-        serverUrl: cleanBase,
-      };
+    if (res.ok) {
+      const data = await res.json();
+      const manifest = parseUpdateManifest(data, manifestUrl, isSsl);
+      if (manifest) {
+        return {
+          hasUpdate: isRemotePatchPending(manifest),
+          manifest,
+          latencyMs,
+          sslVerified: isSsl,
+          serverUrl: manifestUrl,
+          source: 'remote',
+        };
+      }
+      remoteError = 'Ответ сервера не содержит валидного манифеста (нет latestVersion или patchPackage).';
+    } else if (res.status === 404) {
+      remoteError = isSsl
+        ? `TLS-соединение установлено, но сервер вернул HTTP 404: манифест не найден (${manifestUrl}).`
+        : `Сервер вернул HTTP 404: файл обновления не найден.`;
+    } else {
+      remoteError = `Сервер вернул HTTP ${res.status}: ${res.statusText}.`;
     }
-
-    const data = await res.json();
-
-    if (!data || typeof data !== 'object' || !data.latestVersion || !data.patchPackage) {
-      return {
-        hasUpdate: false,
-        error: 'Ответ сервера не содержит валидного манифеста обновления (отсутствуют latestVersion или patchPackage).',
-        latencyMs,
-        sslVerified: isSsl,
-        serverUrl: cleanBase,
-      };
-    }
-
-    const manifest: UpdateManifest = {
-      latestVersion: data.latestVersion,
-      minSupportedVersion: data.minSupportedVersion || '2.0.0',
-      releaseDate: data.releaseDate || new Date().toISOString().slice(0, 10),
-      title: data.title || `Релиз v${data.latestVersion}`,
-      description: data.description || 'Пакет обновления технологического пульта',
-      changelog: Array.isArray(data.changelog) ? data.changelog : ['Плановое обновление системы'],
-      mandatory: Boolean(data.mandatory),
-      packageUrl: data.downloadUrl || manifestUrl,
-      downloadUrl: data.downloadUrl,
-      checksum: data.checksum,
-      serverProtocol: isSsl ? 'HTTPS / TLS 1.3' : 'HTTP',
-      sslVerified: isSsl,
-      patchPackage: data.patchPackage,
-    };
-
-    const hasUpdate = isNewerVersion(manifest.latestVersion, CURRENT_APP_VERSION);
-
-    return {
-      hasUpdate,
-      manifest,
-      latencyMs,
-      sslVerified: isSsl,
-      serverUrl: cleanBase,
-    };
   } catch (err: unknown) {
-    const latencyMs = Math.round(performance.now() - startTime);
-    const errMsg = err instanceof Error 
-      ? (err.name === 'AbortError' ? 'Таймаут соединения (сервер не ответил за 8 сек)' : err.message)
-      : 'Не удалось подключиться к серверу обновлений';
+    const errMsg = err instanceof Error
+      ? (err.name === 'AbortError' ? 'таймаут 8 сек' : err.message)
+      : 'сеть недоступна';
+    remoteError = isSsl
+      ? `Ошибка HTTPS/SSL: ${errMsg}`
+      : `Ошибка соединения: ${errMsg}`;
+  }
 
+  const bundled = bundledFactoryManifest();
+  if (bundled) {
+    const latencyMs = Math.round(performance.now() - startTime);
+    bundled.serverProtocol = 'локальный заводской пакет';
+    bundled.sslVerified = false;
     return {
-      hasUpdate: false,
-      error: `Ошибка SSL/HTTPS соединения: ${errMsg}. Убедитесь, что сервер доступен по сети.`,
+      hasUpdate: isRemotePatchPending(bundled),
+      manifest: bundled,
+      warning: remoteError,
       latencyMs,
-      sslVerified: isSsl,
-      serverUrl: cleanBase,
+      sslVerified: false,
+      serverUrl: manifestUrl,
+      source: 'bundled',
     };
+  }
+
+  return {
+    hasUpdate: false,
+    error: remoteError || 'Не удалось получить манифест обновления.',
+    latencyMs: Math.round(performance.now() - startTime),
+    sslVerified: false,
+    serverUrl: manifestUrl,
+    source: 'bundled',
+  };
+}
+
+export function resolveUrlAgainstManifest(maybeUrl: string | undefined, manifestUrl: string): string | null {
+  if (!maybeUrl || !maybeUrl.trim()) return null;
+  const raw = maybeUrl.trim();
+  try {
+    return new URL(raw, manifestUrl).href;
+  } catch {
+    return raw.startsWith('http') ? raw : null;
+  }
+}
+
+/**
+ * Loads the full alex_patch_v1 from the SSL manifest: inline patchPackage,
+ * or a second HTTPS GET to downloadUrl / packageUrl.
+ */
+export async function downloadSslPatchPackage(
+  manifest: UpdateManifest,
+  manifestUrl: string
+): Promise<{ patch?: AlexPatchPackage; error?: string; viaSsl: boolean }> {
+  const viaSsl = (manifestUrl || '').startsWith('https://');
+
+  if (manifest.patchPackage && manifest.patchPackage.format === 'alex_patch_v1' && manifest.patchPackage.payload) {
+    return { patch: manifest.patchPackage, viaSsl };
+  }
+
+  const remotePatchUrl = resolveUrlAgainstManifest(
+    manifest.downloadUrl || manifest.packageUrl,
+    manifestUrl
+  );
+  if (!remotePatchUrl || remotePatchUrl === manifestUrl) {
+    return { error: 'В манифесте нет patchPackage и нет отдельного downloadUrl патча.', viaSsl };
+  }
+
+  try {
+    const res = await fetch(`${remotePatchUrl}${remotePatchUrl.includes('?') ? '&' : '?'}t=${Date.now()}`, {
+      method: 'GET',
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) {
+      return { error: `Не удалось скачать патч: HTTP ${res.status}`, viaSsl: remotePatchUrl.startsWith('https://') };
+    }
+    const data = await res.json();
+    const patch = (data && data.patchPackage) ? data.patchPackage : data;
+    if (!patch || patch.format !== 'alex_patch_v1' || !patch.payload) {
+      return { error: 'Скачанный файл не является патчем alex_patch_v1.', viaSsl: remotePatchUrl.startsWith('https://') };
+    }
+    return { patch, viaSsl: remotePatchUrl.startsWith('https://') };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'сеть недоступна';
+    return { error: `Ошибка загрузки патча по HTTPS: ${msg}`, viaSsl };
   }
 }
 
