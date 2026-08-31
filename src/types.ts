@@ -177,3 +177,33 @@ export interface BackupSnapshot {
   currentRecipeId: string | null;
 }
 
+export type VersionEventType =
+  | 'release'
+  | 'patch'
+  | 'formula_update'
+  | 'calibration'
+  | 'rollback'
+  | 'manual_audit'
+  | 'ota_sync';
+
+export interface VersionLogEntry {
+  id: string;
+  version: string;
+  timestamp: string;
+  type: VersionEventType;
+  title: string;
+  description: string;
+  author: string;
+  changelog: string[];
+  affectedRecipes?: string[];
+  checksum?: string;
+  backupSnapshotId?: string;
+  isCurrent?: boolean;
+  meta?: {
+    recipesCount?: number;
+    changedComponents?: string[];
+    serverProtocol?: string;
+    targetMinVersion?: string;
+  };
+}
+
