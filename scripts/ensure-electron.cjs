@@ -8,6 +8,11 @@ const fs = require('fs')
 const os = require('os')
 const path = require('path')
 
+if (process.platform !== 'win32') {
+  console.log('[ensure-electron] Not running on Windows, skipping.')
+  process.exit(0)
+}
+
 const electronDir = path.join(__dirname, '..', 'node_modules', 'electron')
 const distDir = path.join(electronDir, 'dist')
 const electronExe = path.join(distDir, 'electron.exe')
