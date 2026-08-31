@@ -1,25 +1,37 @@
-Полное обновление КОДА пульта (не рецептуры)
+Обновление КОДА пульта — точечный патч, не весь exe
 
-Клиент качает готовый Windows exe из GitHub Release `latest-win`.
-Правки src/, electron-main, стилей, любых файлов программы доезжают ТОЛЬКО так.
+Клиент качает с ветки GitHub `ota-dist` ТОЛЬКО файлы интерфейса, чей sha256 отличается
+(index.html, JS/CSS чанки). Chromium/Electron (~80 МБ) не трогается.
+Полный portable exe — запасной канал «ядро», если менялись electron-*.cjs.
 
-Что делать агенту при изменении кода
+Манифест патча
+https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/ota-dist/code-patch.json
+format: alex_code_patch_v1
+
+Что делать агенту при изменении окон, текстов, логики React/Vite
 1. Меняй исходники как нужно.
-2. git add / commit / push в ветку main репозитория https://github.com/BogdanKuklenko/ais-dev
-3. НЕ собирай exe сам. НЕ выкладывай на Cloud Run. НЕ правь update-manifest.json ради UI.
-4. GitHub Actions сам соберёт portable exe и обновит Release tag `latest-win`
-   (артефакты: ALEX_Dosing_Control_Portable.exe + code-update.json).
-5. На заводе: Центр обновлений → «Программа (полный код)» → Проверить → Скачать → Перезапустить.
+2. git add / commit / push в ветку main https://github.com/BogdanKuklenko/ais-dev
+3. НЕ собирай exe. НЕ выкладывай на Cloud Run. НЕ правь update-manifest.json ради UI.
+4. GitHub Actions соберёт dist/ и опубликует ветку ota-dist (code-patch.json + файлы).
+5. На заводе: Центр обновлений → «1. Патч программы» → Проверить → Скачать изменившиеся файлы.
+   Качается несколько КБ–МБ, не вся программа. Интерфейс перезагружается без замены exe.
+
+Когда НУЖЕН полный exe (ядро Electron)
+- Правки electron-main.cjs / electron-preload.cjs / electron-code-update.cjs
+- Смена версии Electron
+- Ручной запуск workflow_dispatch с галкой «Собрать полный portable exe»
+Actions тогда обновит Release tag `latest-win`.
 
 Обязательно
-- GitHub Actions в репозитории включён (Settings → Actions → Allow).
-- Пуш именно в main. Правка только public/update-manifest.json Actions НЕ запускает (это рецептуры).
+- GitHub Actions включён (Settings → Actions → Allow).
+- Пуш в main. Правка только public/update-manifest.json Actions НЕ запускает (рецептуры).
 - Не удаляй workflow `.github/workflows/windows-code-ota.yml`.
-- Не меняй tag latest-win и имена файлов ALEX_Dosing_Control_Portable.exe / code-update.json.
+- Не меняй ветку ota-dist вручную и не указывай Cloud Run / alex-mixes.ru.
 
-Первый раз
-Пока Actions не опубликует Release, кнопка в пульте скажет, что манифеста кода нет.
-После первого зелёного workflow любое следующее изменение кода (push) снова соберёт exe — и пульт его увидит, потому что сравнивается gitSha, а не номер рецептурного патча.
+Первый раз на машине
+Нужен exe, который умеет overlay (userData/app-overlay). Старый пульт без этого кода
+патч не применит — один раз поставьте ядро, дальше только точечные файлы.
 
 Рецептуры
 Отдельный JSON public/update-manifest.json. К коду программы отношения не имеет.
+При изменении рецептур bump latestVersion + новый patchId.

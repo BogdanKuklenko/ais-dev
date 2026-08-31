@@ -1,6 +1,6 @@
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
-const { registerCodeUpdateIpc } = require('./electron-code-update.cjs');
+const { registerCodeUpdateIpc, getRendererIndex } = require('./electron-code-update.cjs');
 
 let mainWindow;
 
@@ -26,7 +26,7 @@ function createWindow() {
 
   Menu.setApplicationMenu(null);
 
-  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  const indexPath = getRendererIndex();
   mainWindow.loadFile(indexPath).catch(() => {
     if (process.env.VITE_DEV_SERVER_URL) {
       mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);

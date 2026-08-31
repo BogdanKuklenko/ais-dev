@@ -1,0 +1,123 @@
+name: Windows code OTA
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'public/update-manifest.json'
+      - 'server-ota/**'
+      - '**/*.md'
+  workflow_dispatch:
+    inputs:
+      build_full_exe:
+        description: 'Собрать полный portable exe (ядро Electron ~80 МБ). Для окон и текстов интерфейса не нужно — достаточно патча.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish-renderer-patch:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) { npm ci } else { npm install }
+
+      - name: Vite build + code-patch.json
+        run: npm run build
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Publish renderer files to ota-dist
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: ota-dist
+          publish_dir: ./dist
+          force_orphan: true
+          commit_message: 'renderer patch ${{ github.sha }}'
+
+  release-full-exe:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_full_exe == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install
+        shell: pwsh
+        run: |
+          if (Test-Path package-lock.json) { npm ci } else { npm install }
+
+      - name: Write build-info.json
+        shell: pwsh
+        run: |
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $info = @{
+            gitSha = $env:GITHUB_SHA
+            version = $pkg.version
+            builtAt = (Get-Date).ToUniversalTime().ToString('o')
+            channel = 'github-actions'
+          }
+          $info | ConvertTo-Json | Set-Content -Encoding utf8 build-info.json
+          Get-Content build-info.json
+
+      - name: Vite build
+        run: npm run build
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Electron portable exe
+        run: npx electron-builder --win portable --config.win.signAndEditExecutable=false
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Write code-update.json
+        shell: pwsh
+        run: |
+          $exe = "dist-electron/ALEX_Dosing_Control_Portable.exe"
+          if (-not (Test-Path $exe)) { throw "exe not found: $exe" }
+          $hash = (Get-FileHash -Algorithm SHA256 $exe).Hash.ToLower()
+          $len = (Get-Item $exe).Length
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $manifest = @{
+            format = 'alex_code_ota_v1'
+            gitSha = $env:GITHUB_SHA
+            version = $pkg.version
+            builtAt = (Get-Date).ToUniversalTime().ToString('o')
+            size = $len
+            sha256 = $hash
+            downloadUrl = "https://github.com/${{ github.repository }}/releases/download/latest-win/ALEX_Dosing_Control_Portable.exe"
+            title = "Ядро Electron $($pkg.version) ($($env:GITHUB_SHA.Substring(0,7)))"
+          }
+          $manifest | ConvertTo-Json | Set-Content -Encoding utf8 dist-electron/code-update.json
+          Get-Content dist-electron/code-update.json
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-win
+          name: ALEX Dosing Control — kernel
+          body: |
+            Полный portable exe — только ядро Electron.
+            Окна и тексты интерфейса обновляются патчем с ветки ota-dist, без скачивания этого файла.
+            Commit: ${{ github.sha }}
+          files: |
+            dist-electron/ALEX_Dosing_Control_Portable.exe
+            dist-electron/code-update.json
+          fail_on_unmatched_files: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

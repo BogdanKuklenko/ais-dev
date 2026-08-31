@@ -38,9 +38,12 @@ import {
 } from '../lib/storage';
 import {
   isAlexDesktop,
+  checkDesktopCodePatch,
+  installDesktopCodePatch,
   checkDesktopCodeUpdate,
   downloadDesktopCodeUpdate,
   applyDesktopCodeUpdate,
+  formatBytes,
 } from '../lib/codeUpdateClient';
 import type { CodeUpdateCheckResult } from '../electron-api';
 
@@ -82,10 +85,14 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
 
   const [isCheckingCode, setIsCheckingCode] = useState(false);
   const [codeCheck, setCodeCheck] = useState<CodeUpdateCheckResult | null>(null);
-  const [isDownloadingCode, setIsDownloadingCode] = useState(false);
+  const [isInstallingPatch, setIsInstallingPatch] = useState(false);
   const [codeDlPercent, setCodeDlPercent] = useState(0);
-  const [codeReadyToApply, setCodeReadyToApply] = useState(false);
-  const [isApplyingCode, setIsApplyingCode] = useState(false);
+  const [kernelCheck, setKernelCheck] = useState<CodeUpdateCheckResult | null>(null);
+  const [isCheckingKernel, setIsCheckingKernel] = useState(false);
+  const [isDownloadingKernel, setIsDownloadingKernel] = useState(false);
+  const [kernelDlPercent, setKernelDlPercent] = useState(0);
+  const [kernelReadyToApply, setKernelReadyToApply] = useState(false);
+  const [isApplyingKernel, setIsApplyingKernel] = useState(false);
 
   // 2. File Patch State (.alex-patch / .json)
   const [uploadedPatch, setUploadedPatch] = useState<AlexPatchPackage | null>(null);
@@ -164,7 +171,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
         const channel = loaded.viaSsl ? 'по защищенному каналу HTTPS/SSL' : 'из встроенного заводского пакета';
         setNetworkHasUpdate(false);
         setStatusMessage({
-          text: `Полное обновление v${res.summary.version} установлено ${channel}. Рецептур добавлено/обновлено: ${res.summary.recipesAdded + res.summary.recipesUpdated}. Интерфейс программы (кнопки, шрифты, новые экраны) этим каналом не меняется — для кода нужна новая сборка exe.`,
+          text: `Полное обновление v${res.summary.version} установлено ${channel}. Рецептур добавлено/обновлено: ${res.summary.recipesAdded + res.summary.recipesUpdated}. Окна и подписи этим каналом не меняются — для кода нужен «Патч программы».`,
           type: 'success',
         });
         if (settings.soundEnabled) playBeep('success');
@@ -183,11 +190,10 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
 
   const handleCheckCode = async () => {
     setIsCheckingCode(true);
-    setCodeReadyToApply(false);
     setCodeDlPercent(0);
     setStatusMessage(null);
     try {
-      const result = await checkDesktopCodeUpdate();
+      const result = await checkDesktopCodePatch();
       setCodeCheck(result);
       if (result.ok && settings.soundEnabled) playBeep('success');
       if (!result.ok && settings.soundEnabled) playBeep('error');
@@ -195,8 +201,9 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
       setCodeCheck({
         ok: false,
         desktop: isAlexDesktop(),
+        kind: 'patch',
         hasUpdate: false,
-        error: 'Не удалось проверить обновление программы',
+        error: 'Не удалось проверить патч интерфейса',
       });
       if (settings.soundEnabled) playBeep('error');
     } finally {
@@ -204,17 +211,66 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
     }
   };
 
-  const handleDownloadCode = async () => {
-    setIsDownloadingCode(true);
+  const handleInstallPatch = async () => {
+    setIsInstallingPatch(true);
     setCodeDlPercent(0);
-    setCodeReadyToApply(false);
     setStatusMessage(null);
     try {
-      const result = await downloadDesktopCodeUpdate((p) => setCodeDlPercent(p.percent));
+      const result = await installDesktopCodePatch((p) => setCodeDlPercent(p.percent));
       if (result.ok) {
-        setCodeReadyToApply(true);
         setStatusMessage({
-          text: 'Exe скачан и проверен. Нажмите «Установить и перезапустить». Смена закроется на несколько секунд.',
+          text: 'Патч установлен. Интерфейс перезагружается — exe не заменяется.',
+          type: 'success',
+        });
+        setCodeCheck((prev) => (prev ? { ...prev, hasUpdate: false } : prev));
+        if (settings.soundEnabled) playBeep('success');
+      } else {
+        setStatusMessage({ text: result.error || 'Не удалось установить патч', type: 'error' });
+        if (settings.soundEnabled) playBeep('error');
+      }
+    } catch {
+      setStatusMessage({ text: 'Сбой установки патча', type: 'error' });
+      if (settings.soundEnabled) playBeep('error');
+    } finally {
+      setIsInstallingPatch(false);
+    }
+  };
+
+  const handleCheckKernel = async () => {
+    setIsCheckingKernel(true);
+    setKernelReadyToApply(false);
+    setKernelDlPercent(0);
+    setStatusMessage(null);
+    try {
+      const result = await checkDesktopCodeUpdate();
+      setKernelCheck(result);
+      if (result.ok && settings.soundEnabled) playBeep('success');
+      if (!result.ok && settings.soundEnabled) playBeep('error');
+    } catch {
+      setKernelCheck({
+        ok: false,
+        desktop: isAlexDesktop(),
+        kind: 'exe',
+        hasUpdate: false,
+        error: 'Не удалось проверить ядро Electron',
+      });
+      if (settings.soundEnabled) playBeep('error');
+    } finally {
+      setIsCheckingKernel(false);
+    }
+  };
+
+  const handleDownloadCode = async () => {
+    setIsDownloadingKernel(true);
+    setKernelDlPercent(0);
+    setKernelReadyToApply(false);
+    setStatusMessage(null);
+    try {
+      const result = await downloadDesktopCodeUpdate((p) => setKernelDlPercent(p.percent));
+      if (result.ok) {
+        setKernelReadyToApply(true);
+        setStatusMessage({
+          text: 'Exe ядра скачан и проверен. Нажмите «Установить и перезапустить». Нужен только если менялся Electron, не окна.',
           type: 'success',
         });
         if (settings.soundEnabled) playBeep('success');
@@ -226,12 +282,12 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
       setStatusMessage({ text: 'Сбой загрузки exe', type: 'error' });
       if (settings.soundEnabled) playBeep('error');
     } finally {
-      setIsDownloadingCode(false);
+      setIsDownloadingKernel(false);
     }
   };
 
   const handleApplyCode = async () => {
-    setIsApplyingCode(true);
+    setIsApplyingKernel(true);
     try {
       const result = await applyDesktopCodeUpdate();
       if (!result.ok) {
@@ -242,7 +298,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
       setStatusMessage({ text: 'Сбой установки программы', type: 'error' });
       if (settings.soundEnabled) playBeep('error');
     } finally {
-      setIsApplyingCode(false);
+      setIsApplyingKernel(false);
     }
   };
 
@@ -377,7 +433,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
             }`}
           >
             <Cpu className="w-4 h-4" />
-            <span>1. Программа (полный код)</span>
+            <span>1. Патч программы</span>
           </button>
 
           <button
@@ -420,20 +476,20 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                     </div>
                     <div>
                       <span className="text-xs font-black uppercase tracking-wider text-orange-400 block">
-                        Полная замена программы (exe)
+                        Точечный патч интерфейса
                       </span>
                       <p className="text-xs text-[#A0A6B5] mt-0.5 max-w-xl">
-                        Качает с GitHub готовый пульт целиком: интерфейс, логика, Electron. Правки кода в репозитории подхватываются после сборки Actions, не через JSON рецептур.
+                        Качаются только изменившиеся окна, скрипты и подписи. Chromium и exe не трогаются — даже если пульт когда-нибудь станет огромным.
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleCheckCode}
-                    disabled={isCheckingCode}
+                    disabled={isCheckingCode || isInstallingPatch}
                     className="px-4 py-2 rounded-xl bg-[#E63B00] hover:bg-[#CC3400] text-white text-xs sm:text-sm font-bold flex items-center gap-2 shadow-xs transition disabled:opacity-50"
                   >
                     <RefreshCw className={`w-4 h-4 ${isCheckingCode ? 'animate-spin' : ''}`} />
-                    <span>{isCheckingCode ? 'Проверка…' : 'Проверить программу'}</span>
+                    <span>{isCheckingCode ? 'Проверка…' : 'Проверить патч'}</span>
                   </button>
                 </div>
               </div>
@@ -441,7 +497,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
               {!isAlexDesktop() && (
                 <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-900 dark:text-amber-200 text-xs sm:text-sm flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <span>Сейчас открыт браузерный предпросмотр. Полное обновление кода работает только в exe (Start_ALEX.bat).</span>
+                  <span>Сейчас открыт браузерный предпросмотр. Патч интерфейса ставится только в exe (Start_ALEX.bat).</span>
                 </div>
               )}
 
@@ -449,7 +505,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                 <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/40 text-red-800 dark:text-red-300 text-xs sm:text-sm flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block">Сборка на GitHub ещё не опубликована или сеть недоступна</span>
+                    <span className="font-bold block">Патч на GitHub ещё не опубликован или сеть недоступна</span>
                     <span>{codeCheck.error}</span>
                   </div>
                 </div>
@@ -459,9 +515,10 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                 <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm flex items-start gap-3">
                   <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
                   <div>
-                    <span className="font-bold block">Программа уже совпадает с GitHub</span>
+                    <span className="font-bold block">Интерфейс уже совпадает с GitHub</span>
                     <span className="font-mono">
-                      {codeCheck.currentSha ? codeCheck.currentSha.slice(0, 12) : '—'}
+                      {codeCheck.remoteSha ? codeCheck.remoteSha.slice(0, 12) : '—'}
+                      {codeCheck.fileCount != null ? ` • ${codeCheck.fileCount} файл(ов)` : ''}
                     </span>
                   </div>
                 </div>
@@ -472,43 +529,89 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#E63B00] text-white">
-                        Новая сборка кода
+                        Патч, не вся программа
                       </span>
                       <h3 className="text-sm sm:text-base font-black text-[#111215] dark:text-white mt-1">
-                        {codeCheck.title || 'Обновление программы'}
+                        {codeCheck.title || 'Обновление интерфейса'}
                       </h3>
-                      <p className="text-xs text-[#717684] dark:text-[#8E95A5] font-mono mt-1">
-                        {codeCheck.currentSha ? codeCheck.currentSha.slice(0, 10) : 'local'}
-                        {' → '}
-                        {codeCheck.remoteSha ? codeCheck.remoteSha.slice(0, 10) : '—'}
-                        {codeCheck.sizeBytes ? ` • ${(codeCheck.sizeBytes / 1024 / 1024).toFixed(1)} МБ` : ''}
+                      <p className="text-xs text-[#717684] dark:text-[#8E95A5] mt-1">
+                        Скачать: {formatBytes(codeCheck.sizeBytes) || 'несколько файлов'}
+                        {codeCheck.changedCount != null ? ` • изменилось ${codeCheck.changedCount}` : ''}
+                        {codeCheck.unchangedCount != null ? `, без изменений ${codeCheck.unchangedCount}` : ''}
                       </p>
+                      {codeCheck.changedFiles && codeCheck.changedFiles.length > 0 && (
+                        <ul className="mt-2 text-[11px] font-mono text-[#717684] dark:text-[#8E95A5] space-y-0.5 max-h-28 overflow-y-auto">
+                          {codeCheck.changedFiles.map((f) => (
+                            <li key={f.path}>
+                              {f.path} · {formatBytes(f.size)}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={handleDownloadCode}
-                        disabled={isDownloadingCode || isApplyingCode}
-                        className="px-4 py-2.5 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] text-xs sm:text-sm font-black flex items-center gap-2 disabled:opacity-50"
-                      >
-                        <DownloadCloud className="w-4 h-4" />
-                        <span>{isDownloadingCode ? `Загрузка ${codeDlPercent}%` : 'Скачать exe'}</span>
-                      </button>
-                      <button
-                        onClick={handleApplyCode}
-                        disabled={!codeReadyToApply || isApplyingCode}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-black disabled:opacity-50"
-                      >
-                        {isApplyingCode ? 'Перезапуск…' : 'Установить и перезапустить'}
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleInstallPatch}
+                      disabled={isInstallingPatch}
+                      className="px-4 py-2.5 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] text-xs sm:text-sm font-black flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <DownloadCloud className="w-4 h-4" />
+                      <span>{isInstallingPatch ? `Загрузка ${codeDlPercent}%` : 'Скачать изменившиеся файлы'}</span>
+                    </button>
                   </div>
-                  {isDownloadingCode && (
+                  {isInstallingPatch && (
                     <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
                       <div className="h-full bg-[#E63B00] transition-all" style={{ width: `${codeDlPercent}%` }} />
                     </div>
                   )}
                 </div>
               )}
+
+              <details className="rounded-xl border border-[#E5E5E0] dark:border-[#26282E] bg-white dark:bg-[#15171C] p-4">
+                <summary className="cursor-pointer text-xs sm:text-sm font-bold text-[#717684] dark:text-[#8E95A5]">
+                  Ядро Electron (полный exe ~80 МБ) — только если менялся сам Electron
+                </summary>
+                <div className="mt-3 space-y-3">
+                  <p className="text-xs text-[#717684] dark:text-[#8E95A5]">
+                    Для новых окон и десятка слов в интерфейсе это не нужно. Качает весь portable exe и перезапускает процесс.
+                  </p>
+                  <button
+                    onClick={handleCheckKernel}
+                    disabled={isCheckingKernel || isDownloadingKernel || isApplyingKernel}
+                    className="px-3 py-1.5 rounded-lg bg-[#111215] dark:bg-[#2D3039] text-white text-xs font-bold disabled:opacity-50"
+                  >
+                    {isCheckingKernel ? 'Проверка ядра…' : 'Проверить ядро'}
+                  </button>
+                  {kernelCheck && !kernelCheck.ok && (
+                    <p className="text-xs text-red-600">{kernelCheck.error}</p>
+                  )}
+                  {kernelCheck?.ok && !kernelCheck.hasUpdate && (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300 font-mono">
+                      Ядро совпадает {kernelCheck.currentSha ? kernelCheck.currentSha.slice(0, 12) : ''}
+                    </p>
+                  )}
+                  {kernelCheck?.ok && kernelCheck.hasUpdate && (
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="text-xs font-mono text-[#717684]">
+                        {formatBytes(kernelCheck.sizeBytes)} · {kernelCheck.remoteSha?.slice(0, 10)}
+                      </span>
+                      <button
+                        onClick={handleDownloadCode}
+                        disabled={isDownloadingKernel || isApplyingKernel}
+                        className="px-3 py-1.5 rounded-lg bg-[#111215] text-white text-xs font-bold disabled:opacity-50"
+                      >
+                        {isDownloadingKernel ? `${kernelDlPercent}%` : 'Скачать exe'}
+                      </button>
+                      <button
+                        onClick={handleApplyCode}
+                        disabled={!kernelReadyToApply || isApplyingKernel}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-bold disabled:opacity-50"
+                      >
+                        {isApplyingKernel ? 'Перезапуск…' : 'Установить и перезапустить'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </details>
             </div>
           )}
 
