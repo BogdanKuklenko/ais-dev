@@ -14,6 +14,8 @@
     background-color: var(--bg-main);
     color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
     font-feature-settings: 'tnum' on, 'lnum' on, 'cv02' on, 'cv03' on, 'cv04' on;
     -webkit-font-smoothing: antialiased;
   }

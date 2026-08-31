@@ -499,66 +499,66 @@ export default function App() {
         
         {/* Zero-Loss Force Update / Session Restored Banner */}
         {forcedUpdateBanner && (
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border-2 border-emerald-500/60 shadow-xl text-white flex flex-col md:flex-row md:items-center justify-between gap-3 animate-fadeIn">
-            <div className="flex items-start sm:items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
-                <Lock className="w-5 h-5" />
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border-2 border-emerald-500/60 shadow-xl text-white flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
+                <Lock className="w-6 h-6" />
               </div>
-              <div className="space-y-0.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950">
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="px-2.5 py-0.5 rounded-md text-xs font-black uppercase tracking-wider bg-emerald-500 text-slate-950">
                     {forcedUpdateBanner.type === 'forced_remote_update' ? 'SSL API Force Push' : 'Сессия Сохранена'}
                   </span>
-                  <span className="font-bold text-xs sm:text-sm text-emerald-300">
+                  <span className="font-bold text-sm sm:text-base text-emerald-300">
                     {forcedUpdateBanner.title}
                   </span>
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-xs text-slate-400 font-mono">
                     [{forcedUpdateBanner.timestamp}]
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed max-w-3xl">
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
                   {forcedUpdateBanner.message}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 self-end md:self-center shrink-0">
+            <div className="flex items-center gap-2.5 self-end md:self-center shrink-0">
               <button
                 type="button"
                 onClick={() => setIsUpdateModalOpen(true)}
-                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow-sm"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-bold transition shadow-sm"
               >
                 Центр обновлений
               </button>
               <button
                 type="button"
                 onClick={() => setForcedUpdateBanner(null)}
-                className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+                className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition"
                 title="Закрыть уведомление"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
         )}
 
         {/* Quick Shift Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] shadow-xs text-xs text-[#111215] dark:text-white transition-colors">
-          <div className="flex items-center gap-2 font-mono text-[#5E6472] dark:text-[#A0A6B5]">
-            <span className="w-2 h-2 rounded-full bg-[#E63B00]"></span>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] shadow-xs text-sm text-[#111215] dark:text-white transition-colors">
+          <div className="flex items-center gap-2.5 font-mono text-[#5E6472] dark:text-[#A0A6B5]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#E63B00]"></span>
             <span>
-              Смена №{shiftNumber} • {shiftDate} • Оператор: <strong className="text-[#111215] dark:text-white">{settings.operatorName}</strong>
+              Смена №{shiftNumber} • {shiftDate} • Оператор: <strong className="text-[#111215] dark:text-white font-bold">{settings.operatorName}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <button
               onClick={handleLoadDemoShift}
               id="btn-load-demo-data"
-              className="px-2.5 py-1 rounded-lg bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-[11px] font-semibold flex items-center gap-1.5 transition"
+              className="px-3.5 py-1.5 rounded-xl bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-xs sm:text-sm font-bold flex items-center gap-2 transition"
               title="Заполнить 40 тестовых замесов"
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#E63B00]" />
+              <Sparkles className="w-4 h-4 text-[#E63B00]" />
               <span>Демо 40 замесов</span>
             </button>
 
@@ -569,7 +569,7 @@ export default function App() {
                     setBatches([]);
                   }
                 }}
-                className="px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[#717684] hover:text-rose-600 dark:hover:text-rose-400 text-[11px] font-medium transition"
+                className="px-3 py-1.5 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[#717684] hover:text-rose-600 dark:hover:text-rose-400 text-xs sm:text-sm font-semibold transition"
               >
                 Очистить
               </button>
@@ -669,37 +669,37 @@ export default function App() {
 
         {/* TAB 3: FORMULAS / RECIPES REPOSITORY */}
         {activeTab === 'recipes' && (
-          <div className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl p-4 sm:p-5 shadow-sm space-y-4 animate-fadeIn transition-colors">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EBEBE6] dark:border-[#26282E] pb-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
-                  <Layers className="w-4 h-4 text-[#E63B00]" />
+          <div className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 animate-fadeIn transition-colors">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EBEBE6] dark:border-[#26282E] pb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
+                  <Layers className="w-5 h-5 text-[#E63B00]" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-[#111215] dark:text-white text-base">
+                  <h3 className="font-black text-[#111215] dark:text-white text-lg">
                     Рецептуры и нормы смеси
                   </h3>
-                  <p className="text-xs text-[#717684] dark:text-[#8E95A5] font-mono">
+                  <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5] font-mono">
                     Активная формула: <strong className="text-[#E63B00]">{currentRecipe.code} ({currentRecipe.name})</strong>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsRecipeManagerOpen(true)}
-                className="px-3.5 py-1.5 rounded-lg bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs font-bold flex items-center gap-1.5 transition shadow-xs self-start sm:self-auto"
+                className="px-4 py-2.5 rounded-xl bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs sm:text-sm font-bold flex items-center gap-2 transition shadow-xs self-start sm:self-auto"
               >
-                <Plus className="w-3.5 h-3.5 text-[#E63B00]" />
+                <Plus className="w-4 h-4 text-[#E63B00]" />
                 <span>Редактор формул</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recipes.map((r) => {
                 const isSelected = r.id === currentRecipe.id;
                 return (
                   <div
                     key={r.id}
-                    className={`p-4 rounded-xl border transition flex flex-col justify-between gap-3.5 ${
+                    className={`p-4 sm:p-5 rounded-2xl border transition flex flex-col justify-between gap-4 ${
                       isSelected
                         ? 'bg-[#FFF6F3] dark:bg-[#201815] border-[#E63B00] shadow-sm ring-1 ring-[#E63B00]/30'
                         : 'bg-white dark:bg-[#1A1C22] border-[#E5E5E0] dark:border-[#26282E] hover:border-[#111215] dark:hover:border-white'
@@ -707,17 +707,17 @@ export default function App() {
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-[#111215] dark:text-white text-lg">{r.code}</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-[#F0F0EB] dark:bg-[#262830] text-[#5E6472] dark:text-[#A0A6B5] font-mono font-bold">
+                        <span className="font-mono font-black text-[#111215] dark:text-white text-xl">{r.code}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-[#F0F0EB] dark:bg-[#262830] text-[#5E6472] dark:text-[#A0A6B5] font-mono font-bold">
                           {r.targetTotalWeightKg} кг / замес
                         </span>
                       </div>
-                      <h4 className="font-bold text-[#111215] dark:text-white text-sm mt-1">{r.name}</h4>
-                      <p className="text-xs text-[#717684] dark:text-[#8E95A5] mt-0.5 line-clamp-1">{r.description || 'Стандартная рецептура'}</p>
+                      <h4 className="font-bold text-[#111215] dark:text-white text-base mt-2">{r.name}</h4>
+                      <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5] mt-1 line-clamp-1">{r.description || 'Стандартная рецептура'}</p>
 
-                      <div className="space-y-1 mt-3 text-xs font-mono">
+                      <div className="space-y-1.5 mt-3.5 text-xs sm:text-sm font-mono">
                         {r.components.map((c) => (
-                          <div key={c.id} className="flex justify-between text-[#5E6472] dark:text-[#A0A6B5] text-[11px] py-0.5 border-b border-[#F0F0EB] dark:border-[#262830]/50 last:border-0">
+                          <div key={c.id} className="flex justify-between text-[#5E6472] dark:text-[#A0A6B5] text-xs sm:text-sm py-1 border-b border-[#F0F0EB] dark:border-[#262830]/50 last:border-0">
                             <span>{c.name}:</span>
                             <strong className="text-[#111215] dark:text-white">{c.targetWeightKg} кг</strong>
                           </div>
@@ -730,7 +730,7 @@ export default function App() {
                         handleSelectRecipe(r);
                         setActiveTab('console');
                       }}
-                      className={`w-full py-2 rounded-lg font-mono font-bold text-xs transition flex items-center justify-center gap-1.5 ${
+                      className={`w-full py-2.5 rounded-xl font-mono font-bold text-xs sm:text-sm transition flex items-center justify-center gap-2 ${
                         isSelected
                           ? 'bg-[#E63B00] text-white cursor-default shadow-xs'
                           : 'bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#262830] dark:hover:bg-[#30333C] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#333640]'
@@ -747,17 +747,17 @@ export default function App() {
 
         {/* TAB 4: SHIFTS ARCHIVE */}
         {activeTab === 'archive' && (
-          <div className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl p-4 sm:p-5 shadow-sm space-y-4 animate-fadeIn transition-colors">
-            <div className="flex items-center justify-between border-b border-[#EBEBE6] dark:border-[#26282E] pb-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
-                  <History className="w-4 h-4 text-[#E63B00]" />
+          <div className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-2xl p-5 sm:p-6 shadow-sm space-y-5 animate-fadeIn transition-colors">
+            <div className="flex items-center justify-between border-b border-[#EBEBE6] dark:border-[#26282E] pb-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
+                  <History className="w-5 h-5 text-[#E63B00]" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-[#111215] dark:text-white text-base">
+                  <h3 className="font-black text-[#111215] dark:text-white text-lg">
                     Архив сменных рапортов
                   </h3>
-                  <p className="text-xs text-[#717684] dark:text-[#8E95A5] font-mono">
+                  <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5] font-mono">
                     История завершённых смен завода ООО «АЛЕКС»
                   </p>
                 </div>
@@ -765,51 +765,51 @@ export default function App() {
             </div>
 
             {savedShifts.length === 0 ? (
-              <div className="py-12 text-center text-[#717684] space-y-2">
-                <History className="w-8 h-8 mx-auto opacity-30 text-[#E63B00]" />
-                <p className="font-semibold text-sm text-[#111215] dark:text-white">В архиве пока нет сохранённых смен</p>
-                <p className="text-xs text-[#717684] dark:text-[#8E95A5]">
+              <div className="py-12 text-center text-[#717684] space-y-3">
+                <History className="w-10 h-10 mx-auto opacity-30 text-[#E63B00]" />
+                <p className="font-bold text-base text-[#111215] dark:text-white">В архиве пока нет сохранённых смен</p>
+                <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5]">
                   После завершения смены на пульте отчёт будет автоматически сохранён сюда.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {savedShifts.map((shift) => (
                   <div
                     key={shift.id}
-                    className="bg-white dark:bg-[#1A1C22] p-4 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-[#111215] dark:hover:border-white transition shadow-xs"
+                    className="bg-white dark:bg-[#1A1C22] p-4 sm:p-5 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:border-[#111215] dark:hover:border-white transition shadow-xs"
                   >
                     <div>
-                      <div className="flex items-center gap-2 font-mono">
-                        <span className="font-black text-[#111215] dark:text-white text-base">{shift.recipeCode}</span>
-                        <span className="text-xs px-2 py-0.5 rounded bg-[#F0F0EB] dark:bg-[#262830] text-[#5E6472] dark:text-[#A0A6B5]">
+                      <div className="flex items-center gap-2.5 font-mono">
+                        <span className="font-black text-[#111215] dark:text-white text-lg">{shift.recipeCode}</span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-md bg-[#F0F0EB] dark:bg-[#262830] font-bold text-[#5E6472] dark:text-[#A0A6B5]">
                           {shift.shiftDate} (Смена №{shift.shiftNumber})
                         </span>
                       </div>
-                      <div className="text-xs text-[#5E6472] dark:text-[#A0A6B5] mt-1">
-                        Оператор: <strong className="text-[#111215] dark:text-white">{shift.operatorName}</strong> • Замесов: <strong className="text-[#111215] dark:text-white font-mono">{shift.batchesCount}</strong> • Тоннаж: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{(shift.totalActualWeightKg / 1000).toFixed(3)} т</strong>
+                      <div className="text-xs sm:text-sm text-[#5E6472] dark:text-[#A0A6B5] mt-1.5">
+                        Оператор: <strong className="text-[#111215] dark:text-white font-bold">{shift.operatorName}</strong> • Замесов: <strong className="text-[#111215] dark:text-white font-mono">{shift.batchesCount}</strong> • Тоннаж: <strong className="text-emerald-600 dark:text-emerald-400 font-mono">{(shift.totalActualWeightKg / 1000).toFixed(3)} т</strong>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       <button
                         onClick={() => setSummaryModalShift(shift)}
-                        className="px-3 py-1.5 rounded-lg bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#262830] dark:hover:bg-[#30333C] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#333640] text-xs font-semibold transition"
+                        className="px-3.5 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#262830] dark:hover:bg-[#30333C] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#333640] text-xs sm:text-sm font-bold transition"
                       >
                         Просмотр
                       </button>
                       <button
                         onClick={() => exportShiftToPdf(shift, recipes.find((r) => r.id === shift.recipeId))}
-                        className="px-3 py-1.5 rounded-lg bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs font-bold flex items-center gap-1 transition shadow-xs"
+                        className="px-3.5 py-2 rounded-xl bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs sm:text-sm font-bold flex items-center gap-1.5 transition shadow-xs"
                       >
-                        <FileText className="w-3.5 h-3.5 text-[#E63B00]" />
+                        <FileText className="w-4 h-4 text-[#E63B00]" />
                         <span>PDF</span>
                       </button>
                       <button
                         onClick={() => exportShiftToExcel(shift, recipes.find((r) => r.id === shift.recipeId))}
-                        className="px-3 py-1.5 rounded-lg bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#262830] dark:hover:bg-[#30333C] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#333640] text-xs font-semibold flex items-center gap-1 transition"
+                        className="px-3.5 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EAEAE4] dark:bg-[#262830] dark:hover:bg-[#30333C] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#333640] text-xs sm:text-sm font-bold flex items-center gap-1.5 transition"
                       >
-                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <FileSpreadsheet className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         <span>Excel</span>
                       </button>
                       <button
@@ -819,7 +819,7 @@ export default function App() {
                             setSavedShifts(updated);
                           }
                         }}
-                        className="p-1.5 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[#717684] hover:text-rose-600 dark:hover:text-rose-400 transition"
+                        className="p-2 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[#717684] hover:text-rose-600 dark:hover:text-rose-400 transition"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

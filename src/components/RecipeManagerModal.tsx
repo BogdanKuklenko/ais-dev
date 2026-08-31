@@ -166,38 +166,38 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
         className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden text-[#111215] dark:text-white"
       >
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#EBEBE6] dark:border-[#26282E] flex items-center justify-between sticky top-0 bg-white dark:bg-[#15171C] z-10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
-              <Layers className="w-4 h-4 text-[#E63B00]" />
+        <div className="p-4 sm:p-6 border-b border-[#EBEBE6] dark:border-[#26282E] flex items-center justify-between sticky top-0 bg-white dark:bg-[#15171C] z-10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-bold">
+              <Layers className="w-5 h-5 text-[#E63B00]" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight text-[#111215] dark:text-white">
+              <h2 className="text-xl font-black tracking-tight text-[#111215] dark:text-white">
                 Редактор технологических формул
               </h2>
-              <p className="text-xs text-[#717684] dark:text-[#8E95A5]">
+              <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5]">
                 Управление нормами расхода компонентов смесей завода ООО «АЛЕКС»
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {!editingRecipe && (
               <button
                 onClick={startCreateNew}
                 id="btn-create-recipe-modal"
-                className="px-3 py-1.5 rounded-lg bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs font-bold flex items-center gap-1.5 shadow transition"
+                className="px-4 py-2.5 rounded-xl bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs sm:text-sm font-bold flex items-center gap-2 shadow transition"
               >
-                <Plus className="w-3.5 h-3.5 text-[#E63B00]" />
+                <Plus className="w-4 h-4 text-[#E63B00]" />
                 <span>Новая формула</span>
               </button>
             )}
             <button
               onClick={onClose}
               id="btn-close-recipe-manager"
-              className="p-1.5 rounded-lg hover:bg-[#F0F0EB] dark:hover:bg-[#202229] text-[#717684] dark:text-[#8E95A5] hover:text-[#111215] dark:hover:text-white transition"
+              className="p-2 rounded-xl hover:bg-[#F0F0EB] dark:hover:bg-[#202229] text-[#717684] dark:text-[#8E95A5] hover:text-[#111215] dark:hover:text-white transition"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -205,20 +205,20 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
         {/* Body */}
         <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
           {editingRecipe ? (
-            <div className="space-y-5">
-              <div className="bg-[#F8F8F5] dark:bg-[#1A1C22] p-4 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] space-y-4">
-                <div className="flex items-center justify-between border-b border-[#EBEBE6] dark:border-[#26282E] pb-3">
-                  <h3 className="font-extrabold text-[#111215] dark:text-white text-sm">
+            <div className="space-y-6">
+              <div className="bg-[#F8F8F5] dark:bg-[#1A1C22] p-4 sm:p-5 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#EBEBE6] dark:border-[#26282E] pb-3">
+                  <h3 className="font-black text-[#111215] dark:text-white text-base">
                     {isCreatingNew ? 'Новая рецептура' : `Редактирование «${editingRecipe.code}»`}
                   </h3>
-                  <span className="text-xs font-mono font-bold text-[#111215] dark:text-white">
-                    Норма замеса: {editingRecipe.targetTotalWeightKg} кг
+                  <span className="text-sm font-mono font-bold text-[#111215] dark:text-white">
+                    Норма замеса: <strong className="text-base text-[#E63B00]">{editingRecipe.targetTotalWeightKg} кг</strong>
                   </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-sm">
                   <div>
-                    <label className="text-[10px] text-[#717684] uppercase font-bold block mb-1">
+                    <label className="text-xs text-[#717684] uppercase font-bold block mb-1.5">
                       Код формулы *
                     </label>
                     <input
@@ -226,12 +226,12 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                       value={editingRecipe.code}
                       onChange={(e) => setEditingRecipe({ ...editingRecipe, code: e.target.value })}
                       placeholder="С-41"
-                      className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#111215] dark:text-white font-mono font-bold focus:outline-none focus:border-[#E63B00]"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-[#111215] dark:text-white font-mono font-bold text-sm focus:outline-none focus:border-[#E63B00]"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-[#717684] uppercase font-bold block mb-1">
+                    <label className="text-xs text-[#717684] uppercase font-bold block mb-1.5">
                       Категория смеси
                     </label>
                     <select
@@ -242,7 +242,7 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                           category: e.target.value as Recipe['category'],
                         })
                       }
-                      className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#111215] dark:text-white font-medium focus:outline-none focus:border-[#E63B00]"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-[#111215] dark:text-white font-medium text-sm focus:outline-none focus:border-[#E63B00]"
                     >
                       <option value="Штукатурка">Штукатурка</option>
                       <option value="Клей">Клей</option>
@@ -253,7 +253,7 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-[#717684] uppercase font-bold block mb-1">
+                    <label className="text-xs text-[#717684] uppercase font-bold block mb-1.5">
                       Полное наименование *
                     </label>
                     <input
@@ -261,35 +261,35 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                       value={editingRecipe.name}
                       onChange={(e) => setEditingRecipe({ ...editingRecipe, name: e.target.value })}
                       placeholder="Штукатурка цементная..."
-                      className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#111215] dark:text-white font-medium focus:outline-none focus:border-[#E63B00]"
+                      className="w-full px-3.5 py-2.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-[#111215] dark:text-white font-medium text-sm focus:outline-none focus:border-[#E63B00]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Component Rows */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-[10px] font-mono uppercase font-bold text-[#717684] tracking-wider">
+                  <h4 className="text-xs font-mono uppercase font-bold text-[#717684] tracking-wider">
                     Норма сырья на 1 замес (кг):
                   </h4>
                   <button
                     onClick={addComponent}
                     type="button"
-                    className="text-xs font-semibold text-[#111215] dark:text-white hover:text-[#E63B00] flex items-center gap-1 bg-[#F4F4F0] dark:bg-[#202229] px-2.5 py-1 rounded-lg border border-[#E0E0D9] dark:border-[#2D3039]"
+                    className="text-xs sm:text-sm font-bold text-[#111215] dark:text-white hover:text-[#E63B00] flex items-center gap-1.5 bg-[#F4F4F0] dark:bg-[#202229] px-3.5 py-1.5 rounded-xl border border-[#E0E0D9] dark:border-[#2D3039]"
                   >
-                    <Plus className="w-3 h-3 text-[#E63B00]" />
+                    <Plus className="w-4 h-4 text-[#E63B00]" />
                     Добавить строку
                   </button>
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {editingRecipe.components.map((comp, idx) => (
                     <div
                       key={comp.id}
-                      className="bg-[#F8F8F5] dark:bg-[#1A1C22] p-2.5 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] grid grid-cols-1 sm:grid-cols-12 gap-2 items-center text-xs"
+                      className="bg-[#F8F8F5] dark:bg-[#1A1C22] p-3 rounded-xl border border-[#E5E5E0] dark:border-[#26282E] grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center text-sm"
                     >
-                      <div className="sm:col-span-1 font-mono font-bold text-[#717684] text-center">
+                      <div className="sm:col-span-1 font-mono font-bold text-[#717684] text-center text-sm">
                         #{idx + 1}
                       </div>
 
@@ -299,7 +299,7 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                           value={comp.name}
                           onChange={(e) => handleComponentChange(comp.id, 'name', e.target.value)}
                           placeholder="Название компонента"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#111215] dark:text-white font-medium focus:outline-none focus:border-[#E63B00]"
+                          className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-sm text-[#111215] dark:text-white font-medium focus:outline-none focus:border-[#E63B00]"
                         />
                       </div>
 
@@ -309,7 +309,7 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                           value={comp.fraction || ''}
                           onChange={(e) => handleComponentChange(comp.id, 'fraction', e.target.value)}
                           placeholder="Фракция / Марка"
-                          className="w-full px-2.5 py-1.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#5E6472] dark:text-[#8E95A5] font-mono focus:outline-none focus:border-[#E63B00]"
+                          className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-sm text-[#5E6472] dark:text-[#8E95A5] font-mono focus:outline-none focus:border-[#E63B00]"
                         />
                       </div>
 
@@ -325,9 +325,9 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                                 Math.max(0, parseFloat(e.target.value) || 0)
                               )
                             }
-                            className="w-full px-2.5 py-1.5 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-lg text-[#111215] dark:text-white font-mono font-bold pr-7 text-right focus:outline-none focus:border-[#E63B00]"
+                            className="w-full px-3 py-2 bg-white dark:bg-[#111215] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl text-[#111215] dark:text-white font-mono font-bold text-sm pr-8 text-right focus:outline-none focus:border-[#E63B00]"
                           />
-                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-[#9CA3AF]">
+                          <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#9CA3AF]">
                             кг
                           </span>
                         </div>
@@ -337,9 +337,9 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => removeComponent(comp.id)}
-                          className="p-1.5 rounded hover:bg-rose-50 text-[#9CA3AF] hover:text-rose-600 transition"
+                          className="p-2 rounded-lg hover:bg-rose-50 text-[#9CA3AF] hover:text-rose-600 transition"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -348,14 +348,14 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
               </div>
 
               {/* Form Action Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#EBEBE6] dark:border-[#26282E]">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#EBEBE6] dark:border-[#26282E]">
                 <button
                   type="button"
                   onClick={() => {
                     setEditingRecipe(null);
                     setIsCreatingNew(false);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#EBEBE6] hover:bg-[#DFDFD8] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white text-xs font-semibold"
+                  className="px-5 py-2.5 rounded-xl bg-[#EBEBE6] hover:bg-[#DFDFD8] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white text-xs sm:text-sm font-bold"
                 >
                   Отмена
                 </button>
@@ -363,68 +363,68 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                   type="button"
                   onClick={handleSave}
                   id="btn-save-recipe-changes"
-                  className="px-5 py-2 rounded-xl bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs font-bold flex items-center gap-1.5 shadow"
+                  className="px-6 py-2.5 rounded-xl bg-[#111215] hover:bg-[#272A33] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs sm:text-sm font-bold flex items-center gap-2 shadow"
                 >
-                  <Save className="w-3.5 h-3.5 text-[#E63B00]" />
+                  <Save className="w-4 h-4 text-[#E63B00]" />
                   <span>Сохранить формулу</span>
                 </button>
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-[#717684]">
-                <span>Всего рецептур: <strong className="text-[#111215] dark:text-white font-mono">{recipes.length}</strong></span>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs sm:text-sm text-[#717684]">
+                <span>Всего рецептур: <strong className="text-[#111215] dark:text-white font-mono text-sm">{recipes.length}</strong></span>
                 <button
                   onClick={() => {
                     if (window.confirm('Сбросить базу рецептур до заводских стандартных?')) {
                       onResetDefaults();
                     }
                   }}
-                  className="text-[#717684] hover:text-[#E63B00] flex items-center gap-1 text-[11px] font-mono transition"
+                  className="text-[#717684] hover:text-[#E63B00] flex items-center gap-1.5 text-xs sm:text-sm font-mono transition font-semibold"
                 >
-                  <RotateCcw className="w-3 h-3" />
+                  <RotateCcw className="w-3.5 h-3.5" />
                   Сбросить к заводским
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {recipes.map((r) => (
                   <div
                     key={r.id}
-                    className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl p-4 flex flex-col justify-between gap-3 hover:border-[#111215] dark:hover:border-white transition"
+                    className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-xl p-4 sm:p-5 flex flex-col justify-between gap-3.5 hover:border-[#111215] dark:hover:border-white transition"
                   >
                     <div>
                       <div className="flex items-center justify-between font-mono">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black text-[#111215] dark:text-white text-base">
+                        <div className="flex items-center gap-2.5">
+                          <span className="font-black text-[#111215] dark:text-white text-lg">
                             {r.code}
                           </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-[#F0F0EB] dark:bg-[#202229] text-[#5E6472] dark:text-[#8E95A5]">
+                          <span className="text-xs px-2.5 py-0.5 rounded-md bg-[#F0F0EB] dark:bg-[#202229] font-bold text-[#5E6472] dark:text-[#8E95A5]">
                             {r.category}
                           </span>
                         </div>
-                        <span className="text-xs font-bold text-[#111215] dark:text-white">
+                        <span className="text-sm font-bold text-[#111215] dark:text-white">
                           {r.targetTotalWeightKg} кг / замес
                         </span>
                       </div>
 
-                      <h4 className="font-bold text-[#111215] dark:text-white text-sm mt-1">{r.name}</h4>
+                      <h4 className="font-bold text-[#111215] dark:text-white text-base mt-2">{r.name}</h4>
                       {r.description && (
-                        <p className="text-xs text-[#717684] dark:text-[#8E95A5] mt-0.5 line-clamp-1">
+                        <p className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5] mt-1 line-clamp-1">
                           {r.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#EBEBE6] dark:border-[#22242B]">
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#EBEBE6] dark:border-[#22242B]">
                       <button
                         onClick={() => {
                           setEditingRecipe({ ...r });
                           setIsCreatingNew(false);
                         }}
-                        className="px-2.5 py-1 rounded bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white text-xs font-semibold flex items-center gap-1 transition"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 transition"
                       >
-                        <Edit3 className="w-3 h-3 text-[#E63B00]" />
+                        <Edit3 className="w-3.5 h-3.5 text-[#E63B00]" />
                         Изменить
                       </button>
 
@@ -435,9 +435,9 @@ export const RecipeManagerModal: React.FC<RecipeManagerModalProps> = ({
                               onDeleteRecipe(r.id);
                             }
                           }}
-                          className="p-1 rounded hover:bg-rose-50 text-[#9CA3AF] hover:text-rose-600 transition"
+                          className="p-1.5 rounded-lg hover:bg-rose-50 text-[#9CA3AF] hover:text-rose-600 transition"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
