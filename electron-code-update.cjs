@@ -13,8 +13,12 @@ const MANIFEST_URLS = [
   `https://github.com/${REPO}/releases/download/${TAG}/code-update.json`,
   `https://github.com/${REPO}/releases/latest/download/code-update.json`,
 ];
-const PATCH_MANIFEST_URL = `https://raw.githubusercontent.com/${REPO}/ota-dist/code-patch.json`;
 const PATCH_FILE_BASE = `https://raw.githubusercontent.com/${REPO}/ota-dist/`;
+const PATCH_MANIFEST_URLS = [
+  `https://api.github.com/repos/${REPO}/contents/code-patch.json?ref=ota-dist`,
+  `https://raw.githubusercontent.com/${REPO}/ota-dist/code-patch.json`,
+  `https://github.com/${REPO}/raw/ota-dist/code-patch.json`,
+];
 
 function readBuildInfo() {
   const candidates = [
@@ -60,7 +64,47 @@ function overlayRoot() {
 }
 
 function bakedDistRoot() {
+  const unpacked = path.join(process.resourcesPath || '', 'app.asar.unpacked', 'dist');
+  if (unpacked && fs.existsSync(path.join(unpacked, 'index.html'))) return unpacked;
   return path.join(__dirname, 'dist');
+}
+
+function overlayInfoPath() {
+  return path.join(overlayRoot(), 'overlay-info.json');
+}
+
+function readOverlayInfo() {
+  try {
+    return JSON.parse(fs.readFileSync(overlayInfoPath(), 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+function currentRendererSha() {
+  const overlayIndex = path.join(overlayRoot(), 'index.html');
+  const info = readOverlayInfo();
+  if (info && info.gitSha) return String(info.gitSha).toLowerCase();
+  if (fs.existsSync(overlayIndex)) return 'overlay-unknown';
+  return String(readBuildInfo().gitSha || '').toLowerCase();
+}
+
+function isPlaceholderSha(s) {
+  const x = String(s || '').trim().toLowerCase();
+  return !x || x === 'local' || x === 'unknown' || x === 'overlay-unknown';
+}
+
+function filesTotalBytes(manifest) {
+  if (!manifest || !Array.isArray(manifest.files)) return 0;
+  if (Number(manifest.totalBytes) > 0) return Number(manifest.totalBytes);
+  return manifest.files.reduce((s, f) => s + (Number(f.size) || 0), 0);
+}
+
+function formatKb(n) {
+  if (!n) return 'несколько файлов';
+  if (n < 1024) return `${n} Б`;
+  if (n < 1024 * 1024) return `${Math.max(1, Math.round(n / 1024))} КБ`;
+  return `${(n / (1024 * 1024)).toFixed(1)} МБ`;
 }
 
 function getRendererIndex() {
@@ -112,7 +156,11 @@ function httpsGet(url, { json = false, dest = null, onProgress = null } = {}) {
         {
           headers: {
             'User-Agent': 'ALEX-Dosing-Control-OTA',
-            Accept: json ? 'application/json' : '*/*',
+            Accept: json
+              ? 'application/vnd.github.raw, application/json;q=0.9, */*;q=0.8'
+              : '*/*',
+            'Cache-Control': 'no-cache',
+            Pragma: 'no-cache',
           },
         },
         (res) => {
@@ -183,9 +231,31 @@ async function fetchManifest() {
 }
 
 async function fetchPatchManifest() {
-  const data = await httpsGet(withBust(PATCH_MANIFEST_URL), { json: true });
-  if (!data || data.format !== 'alex_code_patch_v1' || !Array.isArray(data.files)) {
-    throw new Error('code-patch.json: нужен формат alex_code_patch_v1');
+  let lastErr;
+  for (const u of PATCH_MANIFEST_URLS) {
+    try {
+      const data = await httpsGet(withBust(u), { json: true });
+      const parsed = unwrapGithubContents(data);
+      if (parsed && parsed.format === 'alex_code_patch_v1' && Array.isArray(parsed.files) && parsed.gitSha) {
+        return parsed;
+      }
+      lastErr = new Error('code-patch.json: нужен формат alex_code_patch_v1');
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('code-patch.json не найден (ветка ota-dist)');
+}
+
+function unwrapGithubContents(data) {
+  if (!data || typeof data !== 'object') return data;
+  if (data.format === 'alex_code_patch_v1') return data;
+  if (data.encoding === 'base64' && typeof data.content === 'string') {
+    try {
+      return JSON.parse(Buffer.from(data.content.replace(/\s/g, ''), 'base64').toString('utf8'));
+    } catch {
+      return null;
+    }
   }
   return data;
 }
@@ -268,11 +338,19 @@ async function swapOverlay(staging, getMainWindow) {
   const dest = overlayRoot();
   const bak = dest + '-bak';
   const win = typeof getMainWindow === 'function' ? getMainWindow() : null;
-  const baked = path.join(bakedDistRoot(), 'index.html');
 
-  if (fs.existsSync(dest) && win && !win.isDestroyed() && fs.existsSync(baked)) {
-    await win.loadFile(baked);
-    await wait(400);
+  if (win && !win.isDestroyed()) {
+    try {
+      await win.webContents.session.clearCache();
+    } catch {
+      /* cache clear is best-effort */
+    }
+    try {
+      await win.loadURL('about:blank');
+    } catch {
+      /* continue swap even if blank load fails */
+    }
+    await wait(250);
   }
 
   if (fs.existsSync(bak)) fs.rmSync(bak, { recursive: true, force: true });
@@ -286,7 +364,9 @@ async function swapOverlay(staging, getMainWindow) {
   fs.renameSync(staging, dest);
 
   if (win && !win.isDestroyed()) {
-    await win.loadFile(path.join(dest, 'index.html'));
+    await win.loadFile(path.join(dest, 'index.html'), {
+      query: { alex: String(Date.now()) },
+    });
   }
   try {
     if (fs.existsSync(bak)) fs.rmSync(bak, { recursive: true, force: true });
@@ -296,20 +376,17 @@ async function swapOverlay(staging, getMainWindow) {
 }
 
 async function applyRendererPatch(manifest, { getMainWindow, onProgress }) {
-  const { changed, unchanged } = diffPatch(manifest);
+  const files = Array.isArray(manifest.files) ? manifest.files : [];
+  if (!files.length) throw new Error('В патче нет файлов интерфейса');
+
   const staging = path.join(app.getPath('userData'), 'app-overlay-staging');
   if (fs.existsSync(staging)) fs.rmSync(staging, { recursive: true, force: true });
   fs.mkdirSync(staging, { recursive: true });
 
-  for (const f of unchanged) {
-    const src = resolveExistingFile(f.path);
-    if (!src) throw new Error('Локальная копия пропала: ' + f.path);
-    copyLocal(src, path.join(staging, ...f.path.split('/')));
-  }
-
-  const totalDownload = changed.reduce((s, f) => s + (Number(f.size) || 0), 0);
+  const totalDownload = files.reduce((s, f) => s + (Number(f.size) || 0), 0) || 1;
   let done = 0;
-  for (const f of changed) {
+  for (const f of files) {
+    assertSafeRel(f.path);
     const dest = path.join(staging, ...f.path.split('/'));
     fs.mkdirSync(path.dirname(dest), { recursive: true });
     await httpsGet(withBust(patchFileUrl(f.path)), {
@@ -318,11 +395,10 @@ async function applyRendererPatch(manifest, { getMainWindow, onProgress }) {
         if (!onProgress) return;
         const rec = Number(p.received) || 0;
         const overall = done + rec;
-        const total = totalDownload || overall || 1;
         onProgress({
           received: overall,
-          total,
-          percent: Math.min(99, Math.round((overall / total) * 100)),
+          total: totalDownload,
+          percent: Math.min(99, Math.round((overall / totalDownload) * 100)),
         });
       },
     });
@@ -335,12 +411,20 @@ async function applyRendererPatch(manifest, { getMainWindow, onProgress }) {
     }
     done += Number(f.size) || fs.statSync(dest).size;
   }
+  fs.writeFileSync(
+    path.join(staging, 'overlay-info.json'),
+    JSON.stringify(
+      {
+        gitSha: manifest.gitSha,
+        appliedAt: new Date().toISOString(),
+        version: manifest.version || '',
+      },
+      null,
+      2
+    )
+  );
   if (onProgress) {
-    onProgress({
-      received: totalDownload || done,
-      total: totalDownload || done,
-      percent: 100,
-    });
+    onProgress({ received: totalDownload, total: totalDownload, percent: 100 });
   }
 
   await swapOverlay(staging, getMainWindow);
@@ -357,32 +441,37 @@ function registerCodeUpdateIpc(getMainWindow) {
   ipcMain.handle('code-update-build-info', async () => readBuildInfo());
 
   ipcMain.handle('code-patch-check', async () => {
-    const info = readBuildInfo();
-    const state = readState();
-    const currentSha = String(state.appliedPatchGitSha || info.gitSha || '').toLowerCase();
+    const currentSha = currentRendererSha();
     try {
       const manifest = await fetchPatchManifest();
       cachedPatchManifest = manifest;
       const { changed, unchanged } = diffPatch(manifest);
-      const sizeBytes = changed.reduce((s, f) => s + (Number(f.size) || 0), 0);
-      const hasUpdate = changed.length > 0;
+      const remoteSha = String(manifest.gitSha || '').toLowerCase();
+      const hasUpdate =
+        isPlaceholderSha(currentSha) || currentSha !== remoteSha || changed.length > 0;
+      const sizeBytes = hasUpdate
+        ? filesTotalBytes(manifest)
+        : 0;
       return {
         ok: true,
         desktop: true,
         kind: 'patch',
         hasUpdate,
         currentSha,
-        remoteSha: String(manifest.gitSha || '').toLowerCase(),
+        remoteSha,
         version: manifest.version,
         sizeBytes,
         builtAt: manifest.builtAt,
         fileCount: manifest.files.length,
-        changedCount: changed.length,
-        unchangedCount: unchanged.length,
-        changedFiles: changed.slice(0, 24).map((f) => ({ path: f.path, size: f.size })),
+        changedCount: hasUpdate ? manifest.files.length : 0,
+        unchangedCount: hasUpdate ? 0 : unchanged.length,
+        changedFiles: (hasUpdate ? manifest.files : changed).slice(0, 24).map((f) => ({
+          path: f.path,
+          size: f.size,
+        })),
         title: hasUpdate
-          ? `Патч интерфейса: ${changed.length} файл(ов), ${(sizeBytes / 1024).toFixed(0)} КБ`
-          : 'Интерфейс уже совпадает с GitHub',
+          ? `Интерфейс с GitHub (${remoteSha.slice(0, 7)}), ${formatKb(sizeBytes)}`
+          : 'Интерфейс уже совпадает с опубликованным патчем GitHub',
       };
     } catch (e) {
       return {
@@ -399,7 +488,7 @@ function registerCodeUpdateIpc(getMainWindow) {
   ipcMain.handle('code-patch-install', async () => {
     const win = typeof getMainWindow === 'function' ? getMainWindow() : null;
     try {
-      const manifest = cachedPatchManifest || (await fetchPatchManifest());
+      const manifest = await fetchPatchManifest();
       cachedPatchManifest = manifest;
       await applyRendererPatch(manifest, {
         getMainWindow,

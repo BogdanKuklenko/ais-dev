@@ -8,7 +8,7 @@
   "main": "electron-main.cjs",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "build": "vite build && node scripts/write-code-patch-manifest.cjs",
+    "build": "vite build && node scripts/write-code-patch-manifest.cjs && node scripts/publish-ota-dist.cjs",
     "build:exe": "node scripts/build-exe.cjs",
     "preview": "vite preview",
     "postinstall": "node scripts/ensure-electron.cjs",
@@ -19,6 +19,9 @@
     "productName": "ALEX Dosing Control",
     "copyright": "ООО АЛЕКС",
     "asar": true,
+    "asarUnpack": [
+      "dist/**/*"
+    ],
     "npmRebuild": false,
     "directories": {
       "output": "dist-electron"

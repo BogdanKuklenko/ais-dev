@@ -1,41 +1,34 @@
 Обновление КОДА пульта — точечный патч, не весь exe
 
-Клиент качает с ветки GitHub `ota-dist` ТОЛЬКО файлы интерфейса, чей sha256 отличается
-(index.html, JS/CSS чанки). Chromium/Electron (~80 МБ) не трогается.
-Полный portable exe — запасной канал «ядро», если менялись electron-*.cjs.
+Источник правды: ветка main. После каждого push GitHub Actions делает `npm run build`,
+скрипт scripts/publish-ota-dist.cjs сам публикует ветку ota-dist (code-patch.json + файлы UI).
+Это не нужно делать руками и не зависит от правки YAML workflow.
 
-Манифест патча
+Клиент
+- Сравнивает gitSha опубликованного патча с overlay-info (не «случайные» совпадения хешей).
+- Сборка с gitSha local/unknown всегда предлагает скачать интерфейс с GitHub.
+- Установка качает ВСЕ файлы манифеста (~1–2 МБ), проверяет SHA-256, кладёт в userData/app-overlay.
+- Центр обновлений при открытии сам проверяет патч.
+
+Манифест
 https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/ota-dist/code-patch.json
 format: alex_code_patch_v1
 
 Что делать агенту при изменении окон, текстов, логики React/Vite
 1. Меняй исходники как нужно.
-2. git add / commit / push в ветку main https://github.com/BogdanKuklenko/ais-dev
+2. Пушь ВЕСЬ нужный UI в main (не только updater).
 3. НЕ собирай exe. НЕ выкладывай на Cloud Run. НЕ правь update-manifest.json ради UI.
-4. GitHub Actions соберёт dist/ и опубликует ветку ota-dist (code-patch.json + файлы).
-5. На заводе: Центр обновлений → «1. Патч программы» → Проверить → Скачать изменившиеся файлы.
-   Качается несколько КБ–МБ, не вся программа. Интерфейс перезагружается без замены exe.
+4. Actions сам опубликует ota-dist.
+5. На заводе: новый пульт один раз (ядро с overlay). Дальше Центр обновлений → патч качается сам.
 
 Когда НУЖЕН полный exe (ядро Electron)
-- Правки electron-main.cjs / electron-preload.cjs / electron-code-update.cjs
-- Смена версии Electron
-- Ручной запуск workflow_dispatch с галкой «Собрать полный portable exe»
-Actions тогда обновит Release tag `latest-win`.
+- Правки electron-*.cjs, смена Electron, первый заводской экземпляр без overlay.
+- Release tag latest-win.
 
-Обязательно
-- GitHub Actions включён (Settings → Actions → Allow).
-- Пуш в main. Правка только public/update-manifest.json Actions НЕ запускает (рецептуры).
-- Не удаляй workflow `.github/workflows/windows-code-ota.yml`.
-- Не меняй ветку ota-dist вручную и не указывай Cloud Run / alex-mixes.ru.
-- Токен `gh` без scope `workflow` не может обновить YAML в `.github/workflows/`.
-  Шаблон: `server-ota/github-windows-code-ota.yml`. После `gh auth refresh -s workflow`
-  скопируй его в `.github/workflows/windows-code-ota.yml` и запушь — иначе каждый
-  push в src по-прежнему собирает полный exe. Патч-файлы живут на ветке `ota-dist`.
-
-Первый раз на машине
-Нужен exe, который умеет overlay (userData/app-overlay). Старый пульт без этого кода
-патч не применит — один раз поставьте ядро, дальше только точечные файлы.
+Нельзя
+- Cloud Run / alex-mixes.ru
+- Ручная ветка ota-dist, если CI уже публикует её из npm run build
+- Частичный пуш UI (иначе GitHub и пульт снова разъедутся)
 
 Рецептуры
-Отдельный JSON public/update-manifest.json. К коду программы отношения не имеет.
-При изменении рецептур bump latestVersion + новый patchId.
+Отдельный JSON public/update-manifest.json. bump latestVersion + новый patchId.

@@ -105,10 +105,33 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      setStatusMessage(null);
-      setPatchError(null);
-    }
+    if (!isOpen) return;
+    setStatusMessage(null);
+    setPatchError(null);
+    if (!isAlexDesktop()) return;
+    let cancelled = false;
+    setIsCheckingCode(true);
+    void checkDesktopCodePatch()
+      .then((result) => {
+        if (!cancelled) setCodeCheck(result);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setCodeCheck({
+            ok: false,
+            desktop: true,
+            kind: 'patch',
+            hasUpdate: false,
+            error: 'Не удалось проверить патч интерфейса',
+          });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsCheckingCode(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -479,7 +502,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                         Точечный патч интерфейса
                       </span>
                       <p className="text-xs text-[#A0A6B5] mt-0.5 max-w-xl">
-                        Качаются только изменившиеся окна, скрипты и подписи. Chromium и exe не трогаются — даже если пульт когда-нибудь станет огромным.
+                        Пульт сам сравнивает себя с GitHub и при отличии качает интерфейс (~1–2 МБ), не exe. Проверка начинается при открытии этого окна.
                       </p>
                     </div>
                   </div>
@@ -512,15 +535,24 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
               )}
 
               {codeCheck?.ok && !codeCheck.hasUpdate && (
-                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold block">Интерфейс уже совпадает с GitHub</span>
-                    <span className="font-mono">
-                      {codeCheck.remoteSha ? codeCheck.remoteSha.slice(0, 12) : '—'}
-                      {codeCheck.fileCount != null ? ` • ${codeCheck.fileCount} файл(ов)` : ''}
-                    </span>
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm space-y-3">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                    <div>
+                      <span className="font-bold block">Интерфейс совпадает с патчем GitHub</span>
+                      <span className="font-mono">
+                        {codeCheck.remoteSha ? codeCheck.remoteSha.slice(0, 12) : '—'}
+                        {codeCheck.fileCount != null ? ` • ${codeCheck.fileCount} файл(ов)` : ''}
+                      </span>
+                    </div>
                   </div>
+                  <button
+                    onClick={handleInstallPatch}
+                    disabled={isInstallingPatch}
+                    className="px-4 py-2 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] text-xs font-bold disabled:opacity-50"
+                  >
+                    {isInstallingPatch ? `Загрузка ${codeDlPercent}%` : 'Скачать интерфейс с GitHub заново'}
+                  </button>
                 </div>
               )}
 
@@ -529,25 +561,17 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <span className="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-[#E63B00] text-white">
-                        Патч, не вся программа
+                        Нужно скачать интерфейс
                       </span>
                       <h3 className="text-sm sm:text-base font-black text-[#111215] dark:text-white mt-1">
                         {codeCheck.title || 'Обновление интерфейса'}
                       </h3>
                       <p className="text-xs text-[#717684] dark:text-[#8E95A5] mt-1">
-                        Скачать: {formatBytes(codeCheck.sizeBytes) || 'несколько файлов'}
-                        {codeCheck.changedCount != null ? ` • изменилось ${codeCheck.changedCount}` : ''}
-                        {codeCheck.unchangedCount != null ? `, без изменений ${codeCheck.unchangedCount}` : ''}
+                        Сейчас: {codeCheck.currentSha ? codeCheck.currentSha.slice(0, 10) : '—'}
+                        {' → GitHub: '}
+                        {codeCheck.remoteSha ? codeCheck.remoteSha.slice(0, 10) : '—'}
+                        {codeCheck.sizeBytes ? ` • ${formatBytes(codeCheck.sizeBytes)}` : ''}
                       </p>
-                      {codeCheck.changedFiles && codeCheck.changedFiles.length > 0 && (
-                        <ul className="mt-2 text-[11px] font-mono text-[#717684] dark:text-[#8E95A5] space-y-0.5 max-h-28 overflow-y-auto">
-                          {codeCheck.changedFiles.map((f) => (
-                            <li key={f.path}>
-                              {f.path} · {formatBytes(f.size)}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
                     </div>
                     <button
                       onClick={handleInstallPatch}
@@ -555,7 +579,7 @@ export const UpdateManagerModal: React.FC<UpdateManagerModalProps> = ({
                       className="px-4 py-2.5 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] text-xs sm:text-sm font-black flex items-center gap-2 disabled:opacity-50"
                     >
                       <DownloadCloud className="w-4 h-4" />
-                      <span>{isInstallingPatch ? `Загрузка ${codeDlPercent}%` : 'Скачать изменившиеся файлы'}</span>
+                      <span>{isInstallingPatch ? `Загрузка ${codeDlPercent}%` : 'Скачать интерфейс с GitHub'}</span>
                     </button>
                   </div>
                   {isInstallingPatch && (
