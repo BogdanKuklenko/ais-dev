@@ -1,7 +1,7 @@
 {
   "name": "alex-dosing",
   "private": true,
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "Пульт дозирования и учёта замесов ООО АЛЕКС",
   "author": "ООО АЛЕКС",
   "type": "module",
