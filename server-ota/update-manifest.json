@@ -14,7 +14,7 @@
     "Оптимизирована точность отсечки шнековых питателей и логика проверки целостности SHA-256"
   ],
   "mandatory": false,
-  "downloadUrl": "https://OTA_HOST/update-manifest.json",
+  "downloadUrl": "https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json",
   "checksum": "SHA256-E889BC10F20",
   "patchPackage": {
     "format": "alex_patch_v1",

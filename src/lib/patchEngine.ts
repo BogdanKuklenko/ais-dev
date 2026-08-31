@@ -433,9 +433,7 @@ export function exportPatchFile(patch: AlexPatchPackage): void {
   URL.revokeObjectURL(url);
 }
 
-export const DEFAULT_CLOUD_UPDATE_SERVER = typeof window !== 'undefined' && window.location.origin.startsWith('http')
-  ? window.location.origin
-  : 'https://ais-pre-355eyhx4molixaeonprgkr-542213303113.europe-west2.run.app';
+export const DEFAULT_CLOUD_UPDATE_SERVER = 'https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json';
 
 /**
  * Checks for updates over network via secure HTTPS / SSL (OTA)

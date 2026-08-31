@@ -344,9 +344,7 @@ export function saveBackupSnapshots(snapshots: BackupSnapshot[]): void {
   }
 }
 
-export const DEFAULT_PRODUCTION_UPDATE_URL = typeof window !== 'undefined' && window.location.origin.startsWith('http')
-  ? `${window.location.origin}/update-manifest.json`
-  : 'https://ais-pre-355eyhx4molixaeonprgkr-542213303113.europe-west2.run.app/update-manifest.json';
+export const DEFAULT_PRODUCTION_UPDATE_URL = 'https://raw.githubusercontent.com/BogdanKuklenko/ais-dev/main/public/update-manifest.json';
 
 export function getStoredUpdateServerUrl(): string {
   try {
