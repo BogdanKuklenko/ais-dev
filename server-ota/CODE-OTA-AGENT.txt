@@ -1,0 +1,25 @@
+Полное обновление КОДА пульта (не рецептуры)
+
+Клиент качает готовый Windows exe из GitHub Release `latest-win`.
+Правки src/, electron-main, стилей, любых файлов программы доезжают ТОЛЬКО так.
+
+Что делать агенту при изменении кода
+1. Меняй исходники как нужно.
+2. git add / commit / push в ветку main репозитория https://github.com/BogdanKuklenko/ais-dev
+3. НЕ собирай exe сам. НЕ выкладывай на Cloud Run. НЕ правь update-manifest.json ради UI.
+4. GitHub Actions сам соберёт portable exe и обновит Release tag `latest-win`
+   (артефакты: ALEX_Dosing_Control_Portable.exe + code-update.json).
+5. На заводе: Центр обновлений → «Программа (полный код)» → Проверить → Скачать → Перезапустить.
+
+Обязательно
+- GitHub Actions в репозитории включён (Settings → Actions → Allow).
+- Пуш именно в main. Правка только public/update-manifest.json Actions НЕ запускает (это рецептуры).
+- Не удаляй workflow `.github/workflows/windows-code-ota.yml`.
+- Не меняй tag latest-win и имена файлов ALEX_Dosing_Control_Portable.exe / code-update.json.
+
+Первый раз
+Пока Actions не опубликует Release, кнопка в пульте скажет, что манифеста кода нет.
+После первого зелёного workflow любое следующее изменение кода (push) снова соберёт exe — и пульт его увидит, потому что сравнивается gitSha, а не номер рецептурного патча.
+
+Рецептуры
+Отдельный JSON public/update-manifest.json. К коду программы отношения не имеет.

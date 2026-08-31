@@ -1,10 +1,12 @@
-// Electron Main Process for Windows Portable (.exe)
 const { app, BrowserWindow, Menu } = require('electron');
 const path = require('path');
+const { registerCodeUpdateIpc } = require('./electron-code-update.cjs');
 
 let mainWindow;
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'public', 'icon.svg');
+
   mainWindow = new BrowserWindow({
     width: 1360,
     height: 880,
@@ -14,20 +16,18 @@ function createWindow() {
     backgroundColor: '#111215',
     autoHideMenuBar: true,
     webPreferences: {
+      preload: path.join(__dirname, 'electron-preload.cjs'),
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
     },
-    icon: path.join(__dirname, 'public/icon.svg')
+    icon: iconPath,
   });
 
   Menu.setApplicationMenu(null);
 
-  // In production, load the built static single-page app
   const indexPath = path.join(__dirname, 'dist', 'index.html');
-  
   mainWindow.loadFile(indexPath).catch(() => {
-    // If dev server or fallback
     if (process.env.VITE_DEV_SERVER_URL) {
       mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
     } else {
@@ -41,6 +41,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  registerCodeUpdateIpc(() => mainWindow);
   createWindow();
 
   app.on('activate', () => {
