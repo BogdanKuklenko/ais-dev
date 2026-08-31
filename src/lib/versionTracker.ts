@@ -7,6 +7,26 @@ import { CURRENT_APP_VERSION, calculateChecksum } from './patchEngine';
  */
 export const OFFICIAL_VERSION_REGISTRY: VersionLogEntry[] = [
   {
+    id: 'ver_v241_official',
+    version: '2.4.1',
+    timestamp: '2026-08-31T08:50:00.000Z',
+    type: 'release',
+    title: 'Релиз v2.4.1: Восстановление промышленных шрифтов',
+    description: 'По требованию операторов восстановлены крупные размеры шрифтов и кнопок в панели дозирования и шапке.',
+    author: 'Отдел автоматизации и ИТ завода ООО «АЛЕКС»',
+    changelog: [
+      'Увеличены поля ввода фактического веса для удобного сенсорного ввода',
+      'Увеличены кнопки микроподстройки +5 / -5 кг',
+      'Восстановлен читабельный размер навигационных кнопок и информационных блоков в шапке'
+    ],
+    checksum: 'SHA256-D74A2B99',
+    isCurrent: true,
+    meta: {
+      recipesCount: 6,
+      serverProtocol: 'HTTPS / TLS 1.3 Strict',
+    }
+  },
+  {
     id: 'ver_v240_official',
     version: '2.4.0',
     timestamp: '2026-08-31T07:30:00.000Z',
@@ -22,7 +42,7 @@ export const OFFICIAL_VERSION_REGISTRY: VersionLogEntry[] = [
     ],
     affectedRecipes: ['С-41', 'С-41 Про', 'П-20', 'М-150', 'П-25 Люкс'],
     checksum: 'SHA256-A89E23B1',
-    isCurrent: true,
+    isCurrent: false,
     meta: {
       recipesCount: 6,
       serverProtocol: 'HTTPS / TLS 1.3 Strict',

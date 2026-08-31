@@ -24,7 +24,7 @@ import {
 } from './storage';
 import bundledUpdateManifest from '../../public/update-manifest.json';
 
-export const CURRENT_APP_VERSION = '2.4.0';
+export const CURRENT_APP_VERSION = '2.4.1';
 
 export function getEffectiveAppVersion(): string {
   return getStoredAppVersion() || CURRENT_APP_VERSION;

@@ -368,10 +368,10 @@ export const ActiveBatchPanel: React.FC<ActiveBatchPanelProps> = ({
       <div className="bg-white dark:bg-[#15171C] border border-[#E5E5E0] dark:border-[#26282E] rounded-2xl overflow-hidden shadow-sm transition-colors">
         
         {/* Table / Channels Header */}
-        <div className="hidden md:grid grid-cols-12 gap-3 px-6 py-3 bg-[#F9F9F7] dark:bg-[#1A1C22] border-b border-[#EBEBE6] dark:border-[#26282E] text-xs font-mono uppercase tracking-wider text-[#717684] dark:text-[#8E95A5]">
-          <div className="col-span-5 font-black">Компонент смеси</div>
+        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3.5 bg-[#F9F9F7] dark:bg-[#1A1C22] border-b border-[#EBEBE6] dark:border-[#26282E] text-xs font-mono uppercase tracking-wider text-[#717684] dark:text-[#8E95A5]">
+          <div className="col-span-4 font-black">Компонент смеси</div>
           <div className="col-span-2 text-right font-black">Норма</div>
-          <div className="col-span-3 text-center font-black">Фактический вес (кг)</div>
+          <div className="col-span-4 text-center font-black">Фактический вес (кг)</div>
           <div className="col-span-2 text-right font-black">Отклонение</div>
         </div>
 
@@ -390,35 +390,35 @@ export const ActiveBatchPanel: React.FC<ActiveBatchPanelProps> = ({
                 id={`comp-row-${comp.id}`}
                 className="px-4 sm:px-6 py-3.5 sm:py-4 transition hover:bg-[#FAFAF9] dark:hover:bg-[#191B21]"
               >
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                {/* Desktop & Tablet Layout (>= md) */}
+                <div className="hidden md:grid grid-cols-12 gap-4 items-center">
                   
-                  {/* Channel & Component Info (Cols 1-5) */}
-                  <div className="md:col-span-5 flex items-center gap-3.5 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-[#F0F0EB] dark:bg-[#202229] border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center font-mono font-black text-[#111215] dark:text-white text-sm shrink-0">
+                  {/* Channel & Component Info (Cols 1-4) */}
+                  <div className="col-span-4 flex items-center gap-3.5 min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-[#F0F0EB] dark:bg-[#202229] border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center font-mono font-black text-[#111215] dark:text-white text-base shrink-0">
                       {String(idx + 1).padStart(2, '0')}
                     </div>
                     <div className="min-w-0">
-                      <div className="font-black text-[#111215] dark:text-white text-base sm:text-lg truncate">
+                      <div className="font-black text-[#111215] dark:text-white text-lg sm:text-xl truncate" title={comp.name}>
                         {comp.name}
                       </div>
                       {comp.fraction && (
-                        <div className="text-xs sm:text-sm text-[#717684] dark:text-[#8E95A5] font-mono truncate">
+                        <div className="text-sm text-[#717684] dark:text-[#8E95A5] font-mono truncate">
                           {comp.fraction}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Target Norm (Cols 6-7) */}
-                  <div className="md:col-span-2 flex md:justify-end items-center text-sm">
-                    <span className="md:hidden text-[#717684] font-mono mr-2">Норма:</span>
-                    <span className="font-mono text-base sm:text-lg font-bold text-[#5E6472] dark:text-[#A0A6B5] tabular-nums">
-                      {comp.targetWeightKg} <span className="text-xs sm:text-sm font-normal text-[#717684]">кг</span>
+                  {/* Target Norm (Cols 5-6) */}
+                  <div className="col-span-2 text-right">
+                    <span className="font-mono text-lg lg:text-xl font-bold text-[#5E6472] dark:text-[#A0A6B5] tabular-nums">
+                      {comp.targetWeightKg} <span className="text-sm font-normal text-[#717684]">кг</span>
                     </span>
                   </div>
 
-                  {/* Tactile Numeric Input Field (Cols 8-10) */}
-                  <div className="md:col-span-3 flex items-center gap-2">
+                  {/* Tactile Numeric Input Field (Cols 7-10) */}
+                  <div className="col-span-4 flex items-center gap-2">
                     <div className="relative flex-1">
                       <input
                         ref={idx === 0 ? firstInputRef : null}
@@ -429,30 +429,32 @@ export const ActiveBatchPanel: React.FC<ActiveBatchPanelProps> = ({
                         onChange={(e) => handleInputChange(comp.id, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(e, idx)}
                         placeholder={`${comp.targetWeightKg}`}
-                        className={`w-full h-12 sm:h-13 px-4 pr-10 rounded-xl font-mono text-2xl sm:text-3xl font-black text-center border-2 transition focus:outline-none tabular-nums ${
+                        className={`w-full h-12 sm:h-14 px-4 pr-10 rounded-xl font-mono text-2xl sm:text-3xl font-black text-center border-2 transition focus:outline-none tabular-nums ${
                           isFilled
                             ? 'bg-white dark:bg-[#111215] text-[#111215] dark:text-white border-[#111215] dark:border-white shadow-sm ring-2 ring-[#111215]/20 dark:ring-white/20'
                             : 'bg-[#F7F7F4] dark:bg-[#181A20] text-[#717684] border-[#E0E0D9] dark:border-[#2D3039] focus:border-[#E63B00] focus:bg-white dark:focus:bg-[#111215]'
                         }`}
                       />
-                      <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-mono font-bold text-[#9CA3AF] pointer-events-none">
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-mono font-bold text-[#9CA3AF] pointer-events-none">
                         кг
                       </span>
                     </div>
 
                     {/* Micro Step Adjusters */}
-                    <div className="flex flex-col gap-1 shrink-0">
+                    <div className="flex flex-col gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => adjustWeight(comp.id, 5)}
-                        className="w-9 h-6 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white font-mono text-xs font-bold rounded border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center transition"
+                        className="w-10 h-6 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white font-mono text-xs font-bold rounded border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center transition"
+                        title="Добавить 5 кг"
                       >
                         +5
                       </button>
                       <button
                         type="button"
                         onClick={() => adjustWeight(comp.id, -5)}
-                        className="w-9 h-6 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white font-mono text-xs font-bold rounded border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center transition"
+                        className="w-10 h-6 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] dark:hover:bg-[#2A2D36] text-[#111215] dark:text-white font-mono text-xs font-bold rounded border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center transition"
+                        title="Убавить 5 кг"
                       >
                         -5
                       </button>
@@ -460,10 +462,10 @@ export const ActiveBatchPanel: React.FC<ActiveBatchPanelProps> = ({
                   </div>
 
                   {/* Clean Delta Display (Cols 11-12) */}
-                  <div className="md:col-span-2 flex md:justify-end items-center">
+                  <div className="col-span-2 flex justify-end items-center">
                     {isFilled ? (
                       <div
-                        className={`font-mono font-black text-sm sm:text-base tabular-nums flex items-center gap-1.5 ${
+                        className={`font-mono font-black text-base lg:text-lg tabular-nums flex items-center gap-1.5 ${
                           isCompOver
                             ? 'text-[#E63B00]'
                             : isCompUnder
@@ -481,6 +483,76 @@ export const ActiveBatchPanel: React.FC<ActiveBatchPanelProps> = ({
                         —
                       </span>
                     )}
+                  </div>
+                </div>
+
+                {/* Mobile Touch Card Layout (< md) */}
+                <div className="md:hidden space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-[#F0F0EB] dark:bg-[#202229] border border-[#E0E0D9] dark:border-[#2C2F38] flex items-center justify-center font-mono font-black text-[#111215] dark:text-white text-xs shrink-0">
+                        {String(idx + 1).padStart(2, '0')}
+                      </div>
+                      <div className="font-black text-[#111215] dark:text-white text-sm truncate">
+                        {comp.name}
+                      </div>
+                    </div>
+                    {comp.fraction && (
+                      <span className="text-[11px] text-[#717684] dark:text-[#8E95A5] font-mono bg-[#F0F0EB] dark:bg-[#202229] px-2 py-0.5 rounded">
+                        {comp.fraction}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-mono text-[#717684] dark:text-[#8E95A5]">
+                    <span>Норма: <strong className="text-[#111215] dark:text-white">{comp.targetWeightKg} кг</strong></span>
+                    {isFilled && (
+                      <span className={`font-black ${
+                        isCompOver ? 'text-[#E63B00]' : isCompUnder ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'
+                      }`}>
+                        Откл: {diff > 0 ? `+${diff}` : diff === 0 ? '0.0' : diff} кг
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        ref={idx === 0 ? firstInputRef : null}
+                        id={`input-comp-mobile-${idx}`}
+                        type="text"
+                        inputMode="decimal"
+                        value={actualVal}
+                        onChange={(e) => handleInputChange(comp.id, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(e, idx)}
+                        placeholder={`${comp.targetWeightKg}`}
+                        className={`w-full h-11 px-3 pr-8 rounded-xl font-mono text-xl font-black text-center border-2 transition focus:outline-none tabular-nums ${
+                          isFilled
+                            ? 'bg-white dark:bg-[#111215] text-[#111215] dark:text-white border-[#111215] dark:border-white shadow-sm ring-2 ring-[#111215]/20 dark:ring-white/20'
+                            : 'bg-[#F7F7F4] dark:bg-[#181A20] text-[#717684] border-[#E0E0D9] dark:border-[#2D3039] focus:border-[#E63B00] focus:bg-white dark:focus:bg-[#111215]'
+                        }`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-[#9CA3AF] pointer-events-none">
+                        кг
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => adjustWeight(comp.id, -5)}
+                        className="px-2.5 h-11 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] text-[#111215] dark:text-white font-mono text-xs font-bold rounded-xl border border-[#E0E0D9] dark:border-[#2C2F38] transition"
+                      >
+                        -5
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => adjustWeight(comp.id, 5)}
+                        className="px-2.5 h-11 bg-[#F0F0EB] hover:bg-[#E4E4DE] dark:bg-[#202229] text-[#111215] dark:text-white font-mono text-xs font-bold rounded-xl border border-[#E0E0D9] dark:border-[#2C2F38] transition"
+                      >
+                        +5
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

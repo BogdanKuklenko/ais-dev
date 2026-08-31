@@ -129,20 +129,20 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-[#E5E5E0] dark:border-[#26282E]">
-          <table className="w-full text-left text-sm font-mono border-collapse">
+          <table className="w-full text-left text-sm font-mono border-collapse min-w-[640px]">
             <thead>
               <tr className="bg-[#F9F9F7] dark:bg-[#181A20] text-[#717684] dark:text-[#8E95A5] uppercase text-xs tracking-wider border-b border-[#EBEBE6] dark:border-[#26282E]">
-                <th className="py-3 px-3.5 font-black">№</th>
-                <th className="py-3 px-3.5 font-black">Время</th>
+                <th className="py-3 px-3.5 font-black whitespace-nowrap">№</th>
+                <th className="py-3 px-3.5 font-black whitespace-nowrap">Время</th>
                 {recipe.components.map((comp) => (
-                  <th key={comp.id} className="py-3 px-2.5 text-right">
+                  <th key={comp.id} className="py-3 px-2.5 text-right whitespace-nowrap">
                     <span className="text-[#111215] dark:text-white block font-black text-xs sm:text-sm">{comp.name.slice(0, 14)}</span>
                     <span className="text-xs text-[#717684] dark:text-[#8E95A5] block font-normal">{comp.targetWeightKg} кг</span>
                   </th>
                 ))}
-                <th className="py-3 px-3.5 text-right font-black">Факт (кг)</th>
-                <th className="py-3 px-3.5 text-right font-black">Откл.</th>
-                <th className="py-3 px-2.5 text-center font-black">Действия</th>
+                <th className="py-3 px-3.5 text-right font-black whitespace-nowrap">Факт (кг)</th>
+                <th className="py-3 px-3.5 text-right font-black whitespace-nowrap">Откл.</th>
+                <th className="py-3 px-2.5 text-center font-black whitespace-nowrap">Действия</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#EBEBE6] dark:divide-[#22242B] bg-white dark:bg-[#15171C]">
@@ -160,10 +160,10 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
                     id={`batch-row-${b.batchNumber}`}
                     className="hover:bg-[#F9F9F7] dark:hover:bg-[#191B21] transition group"
                   >
-                    <td className="py-3 px-3.5 font-black text-[#111215] dark:text-white tabular-nums text-base">
+                    <td className="py-3 px-3.5 font-black text-[#111215] dark:text-white tabular-nums text-base whitespace-nowrap">
                       №{b.batchNumber}
                     </td>
-                    <td className="py-3 px-3.5 text-[#717684] dark:text-[#8E95A5] tabular-nums font-medium text-xs sm:text-sm">{timeStr}</td>
+                    <td className="py-3 px-3.5 text-[#717684] dark:text-[#8E95A5] tabular-nums font-medium text-xs sm:text-sm whitespace-nowrap">{timeStr}</td>
 
                     {/* Component actual values */}
                     {recipe.components.map((comp) => {
@@ -172,7 +172,7 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
                       const dev = item ? item.deviationKg : 0;
 
                       return (
-                        <td key={comp.id} className="py-3 px-2.5 text-right tabular-nums">
+                        <td key={comp.id} className="py-3 px-2.5 text-right tabular-nums whitespace-nowrap">
                           <span className="text-[#111215] dark:text-white font-bold text-sm sm:text-base">{actualKg}</span>
                           {dev !== 0 && (
                             <span
@@ -187,11 +187,11 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
                       );
                     })}
 
-                    <td className="py-3 px-3.5 text-right font-black text-[#111215] dark:text-white text-base sm:text-lg tabular-nums">
+                    <td className="py-3 px-3.5 text-right font-black text-[#111215] dark:text-white text-base sm:text-lg tabular-nums whitespace-nowrap">
                       {b.totalActualKg}
                     </td>
 
-                    <td className="py-3 px-3.5 text-right tabular-nums">
+                    <td className="py-3 px-3.5 text-right tabular-nums whitespace-nowrap">
                       <span
                         className={`font-black text-sm sm:text-base ${
                           isOver ? 'text-[#E63B00]' : isUnder ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'
@@ -201,7 +201,7 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
                       </span>
                     </td>
 
-                    <td className="py-3 px-2.5 text-center">
+                    <td className="py-3 px-2.5 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5 opacity-70 group-hover:opacity-100">
                         <button
                           onClick={() => onEditBatch(b.batchNumber)}
@@ -230,7 +230,7 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
             {/* Table Footer with Totals */}
             <tfoot>
               <tr className="bg-[#F9F9F7] dark:bg-[#181A20] font-black border-t border-[#E0E0D9] dark:border-[#2D3039] text-[#111215] dark:text-white">
-                <td colSpan={2} className="py-3.5 px-3.5 uppercase text-xs sm:text-sm">
+                <td colSpan={2} className="py-3.5 px-3.5 uppercase text-xs sm:text-sm whitespace-nowrap">
                   ИТОГО ({batches.length} замесов):
                 </td>
                 {recipe.components.map((comp) => {
@@ -240,16 +240,16 @@ export const BatchHistoryTable: React.FC<BatchHistoryTableProps> = ({
                   }, 0);
 
                   return (
-                    <td key={comp.id} className="py-3.5 px-2.5 text-right text-[#111215] dark:text-white font-bold text-sm sm:text-base tabular-nums">
+                    <td key={comp.id} className="py-3.5 px-2.5 text-right text-[#111215] dark:text-white font-bold text-sm sm:text-base tabular-nums whitespace-nowrap">
                       {compTotal.toFixed(1)}
                     </td>
                   );
                 })}
-                <td className="py-3.5 px-3.5 text-right text-[#111215] dark:text-white font-black text-base sm:text-lg tabular-nums">
+                <td className="py-3.5 px-3.5 text-right text-[#111215] dark:text-white font-black text-base sm:text-lg tabular-nums whitespace-nowrap">
                   {totalActualSum.toFixed(1)}
                 </td>
                 <td
-                  className={`py-3.5 px-3.5 text-right font-black text-sm sm:text-base tabular-nums ${
+                  className={`py-3.5 px-3.5 text-right font-black text-sm sm:text-base tabular-nums whitespace-nowrap ${
                     totalDevSum > 0 ? 'text-[#E63B00]' : totalDevSum < 0 ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'
                   }`}
                 >

@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
           
           {/* Left: Brand & Formula Selector */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-shrink-0">
             <div className="flex items-center gap-2.5">
               <div className="w-10 h-10 rounded-xl bg-[#111215] dark:bg-white text-white dark:text-[#111215] flex items-center justify-center font-mono font-black text-sm shrink-0 tracking-wider shadow-sm">
                 AX
@@ -88,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            <div className="h-6 w-px bg-[#E5E5E0] dark:bg-[#2A2D34] hidden sm:block" />
+            <div className="h-6 w-px bg-[#E5E5E0] dark:bg-[#2A2D34] hidden md:block" />
 
             {/* Active Formula Selector */}
             {currentRecipe && (
@@ -97,13 +97,13 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenRecipeSelect}
                 id="header-recipe-pill"
                 className="flex items-center gap-2 sm:gap-2.5 px-3 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE5] dark:bg-[#1C1E23] dark:hover:bg-[#252830] border border-[#E0E0D9] dark:border-[#2D3039] transition text-left group min-w-0"
-                title="Выбрать другую рецептуру смеси"
+                title={`Активный рецепт: ${currentRecipe.code} (${currentRecipe.name}). Нажмите для смены.`}
               >
                 <FlaskConical className="w-4 h-4 text-[#E63B00] shrink-0" />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-xs uppercase font-bold text-[#717684] dark:text-[#8E95A5] leading-none">Рецепт:</div>
-                  <div className="text-sm sm:text-base font-mono font-black text-[#111215] dark:text-white group-hover:text-[#E63B00] transition truncate max-w-[130px] sm:max-w-[220px]">
-                    {currentRecipe.code} <span className="font-normal text-xs text-[#717684] dark:text-[#8E95A5] hidden md:inline">({currentRecipe.name})</span>
+                  <div className="text-sm sm:text-base font-mono font-black text-[#111215] dark:text-white group-hover:text-[#E63B00] transition truncate">
+                    {currentRecipe.code} <span className="font-normal text-xs text-[#717684] dark:text-[#8E95A5] hidden lg:inline">({currentRecipe.name})</span>
                   </div>
                 </div>
                 <ChevronDown className="w-4 h-4 text-[#717684] group-hover:text-[#E63B00] shrink-0 transition" />
@@ -136,7 +136,7 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               <TableProperties className="w-4 h-4" />
-              <span>Журнал</span>
+              <span className="hidden xs:inline">Журнал</span>
               {batchesCount > 0 && (
                 <span className={`text-xs px-2 py-0.5 rounded font-mono font-black ${
                   activeTab === 'journal' 
@@ -181,12 +181,12 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="hidden xl:flex items-center gap-3.5 bg-[#F4F4F0] dark:bg-[#1A1C21] px-3 py-1.5 rounded-xl border border-[#E0E0D9] dark:border-[#2D3039] text-sm font-mono">
               <div>
                 <span className="text-xs uppercase font-bold text-[#717684] dark:text-[#8E95A5] block leading-none">Тоннаж</span>
-                <span className="text-[#111215] dark:text-white font-black text-sm">{totalTons.toFixed(3)} т</span>
+                <span className="text-[#111215] dark:text-white font-black">{totalTons.toFixed(3)} т</span>
               </div>
               <div className="h-5 w-px bg-[#E0E0D9] dark:bg-[#2D3039]" />
               <div>
                 <span className="text-xs uppercase font-bold text-[#717684] dark:text-[#8E95A5] block leading-none">Откл.</span>
-                <span className={`font-black text-sm ${isOver ? 'text-[#E63B00]' : isUnder ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                <span className={`font-black ${isOver ? 'text-[#E63B00]' : isUnder ? 'text-blue-600 dark:text-blue-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                   {totalDeviationKg > 0 ? `+${totalDeviationKg}` : totalDeviationKg} кг
                 </span>
               </div>
@@ -199,9 +199,9 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenVersionHistory}
                 id="btn-header-version-history"
                 className="px-3 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE5] dark:bg-[#1C1E23] dark:hover:bg-[#252830] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-sm font-bold flex items-center gap-1.5 transition group"
-                title="Паспорт версий и журнал модификаций ПО"
+                title={`Паспорт версий и журнал модификаций ПО (v${CURRENT_APP_VERSION})`}
               >
-                <History className="w-4 h-4 text-[#E63B00] group-hover:rotate-[-20deg] transition-transform" />
+                <History className="w-4 h-4 text-[#E63B00] group-hover:rotate-[-20deg] transition-transform shrink-0" />
                 <span className="font-mono text-xs font-black bg-[#E63B00]/10 text-[#E63B00] px-1.5 py-0.5 rounded">
                   v{CURRENT_APP_VERSION}
                 </span>
@@ -216,8 +216,8 @@ export const Header: React.FC<HeaderProps> = ({
               className="px-3 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE5] dark:bg-[#1C1E23] dark:hover:bg-[#252830] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-sm font-bold flex items-center gap-2 transition"
               title="Центр обновлений (SSL OTA и .alex-patch)"
             >
-              <RefreshCw className="w-4 h-4 text-[#E63B00]" />
-              <span className="hidden lg:inline">Обновления</span>
+              <RefreshCw className="w-4 h-4 text-[#E63B00] shrink-0" />
+              <span className="hidden xl:inline">Обновления</span>
             </button>
 
             {/* Direct PDF Export */}
@@ -229,8 +229,8 @@ export const Header: React.FC<HeaderProps> = ({
                 className="px-3 py-2 rounded-xl bg-[#F4F4F0] hover:bg-[#EBEBE5] dark:bg-[#1C1E23] dark:hover:bg-[#252830] text-[#111215] dark:text-white border border-[#E0E0D9] dark:border-[#2D3039] text-sm font-bold flex items-center gap-2 transition"
                 title="Скачать официальный сменный акт в PDF"
               >
-                <FileText className="w-4 h-4 text-[#E63B00]" />
-                <span className="hidden sm:inline">PDF</span>
+                <FileText className="w-4 h-4 text-[#E63B00] shrink-0" />
+                <span className="hidden lg:inline">PDF</span>
               </button>
             )}
 
@@ -281,9 +281,10 @@ export const Header: React.FC<HeaderProps> = ({
                 type="button"
                 onClick={onFinishShift}
                 id="btn-header-finish-shift"
-                className="px-3.5 sm:px-4 py-2 rounded-xl bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-sm font-black shadow-sm transition flex items-center gap-2"
+                className="px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl bg-[#111215] hover:bg-[#252830] dark:bg-white dark:hover:bg-slate-100 text-white dark:text-[#111215] text-xs sm:text-sm font-black shadow-sm transition flex items-center gap-1.5 sm:gap-2 shrink-0"
+                title="Завершить смену и сформировать рапорт"
               >
-                <FileSpreadsheet className="w-4 h-4 text-[#E63B00]" />
+                <FileSpreadsheet className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E63B00] shrink-0" />
                 <span className="hidden sm:inline">Итоги смены</span>
               </button>
             )}
