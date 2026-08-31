@@ -2,8 +2,9 @@
 
 /**
  * Publishes dist/ to branch ota-dist.
- * Runs automatically in GitHub Actions after `vite build`.
- * Locally: set ALEX_PUBLISH_OTA=1 (needs git + GH token).
+ * GitHub Actions: npm run build may have no token (skip). electron-builder
+ * afterPack has GH_TOKEN and publishes.
+ * Local: ALEX_PUBLISH_OTA=1 plus gh token.
  */
 const { spawnSync } = require('child_process');
 const fs = require('fs');
@@ -12,7 +13,14 @@ const os = require('os');
 
 const inActions = process.env.GITHUB_ACTIONS === 'true';
 const forced = process.env.ALEX_PUBLISH_OTA === '1';
-if (!inActions && !forced) {
+const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
+
+if (!forced && !token && !inActions) {
+  process.exit(0);
+}
+
+if (!token) {
+  console.warn('[ota-dist] skip: no GITHUB_TOKEN/GH_TOKEN in this step');
   process.exit(0);
 }
 
@@ -20,15 +28,10 @@ const dist = path.join(__dirname, '..', 'dist');
 const manifestPath = path.join(dist, 'code-patch.json');
 if (!fs.existsSync(manifestPath)) {
   console.error('[ota-dist] dist/code-patch.json missing');
-  process.exit(inActions ? 1 : 0);
+  process.exit(inActions || forced ? 1 : 0);
 }
 
-const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN || '';
 const repo = process.env.GITHUB_REPOSITORY || 'BogdanKuklenko/ais-dev';
-if (!token) {
-  console.error('[ota-dist] no GITHUB_TOKEN — cannot publish');
-  process.exit(inActions ? 1 : 0);
-}
 
 function gitCmd() {
   if (process.platform !== 'win32') return 'git';
@@ -44,12 +47,12 @@ function gitCmd() {
   return 'git';
 }
 
-function run(cmd, args, cwd, extraEnv) {
+function run(cmd, args, cwd) {
   const result = spawnSync(cmd, args, {
     cwd,
     encoding: 'utf8',
     windowsHide: true,
-    env: { ...process.env, GIT_TERMINAL_PROMPT: '0', ...(extraEnv || {}) },
+    env: { ...process.env, GIT_TERMINAL_PROMPT: '0' },
   });
   if (result.status !== 0) {
     const err = (result.stderr || result.stdout || result.error || 'git failed').toString();
@@ -98,7 +101,7 @@ try {
   console.log('[ota-dist] published branch ota-dist for', sha);
 } catch (e) {
   console.error('[ota-dist] publish failed:', e instanceof Error ? e.message : e);
-  process.exit(inActions ? 1 : 1);
+  process.exit(1);
 } finally {
   try {
     fs.rmSync(work, { recursive: true, force: true });
